@@ -1,25 +1,25 @@
 {
-  "name": "react-saas-template",
+  "name": "math-tracker",
   "private": true,
-  "version": "1.0.0",
-  "description": "A modern SaaS starter template built with React, Redux Toolkit, TypeScript, and Tailwind CSS.",
+  "version": "0.1.0",
+  "description": "A modern web application to track and visualize math problem solving progress.",
   "author": "Sajal",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ashsajal1/react-saas-template.git"
+    "url": "https://github.com/ashsajal1/math-tracker.git"
   },
   "bugs": {
-    "url": "https://github.com/ashsajal1/react-saas-template/issues"
+    "url": "https://github.com/ashsajal1/math-tracker/issues"
   },
-  "homepage": "https://github.com/ashsajal1/react-saas-template#readme",
+  "homepage": "https://github.com/ashsajal1/math-tracker#readme",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "generate-pwa-assets": "pwa-assets-generator --preset minimal public/logo.svg"
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
