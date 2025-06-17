@@ -1,41 +1,52 @@
 import { Button } from "@/components/ui/button";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useMathStore, MathProblemType } from "@/lib/store";
 
 // Format date for display
 const formatDate = (date: Date) => date.toLocaleDateString();
 const formatDay = (date: Date) => date.toLocaleDateString('en-US', { weekday: 'short' });
 
-// Generate mock data for demo
-const generateMockData = (days: number) => {
+// Get last N days data
+const getLastNDaysData = (days: number) => {
   const now = new Date();
   return Array.from({ length: days }, (_, i) => {
     const date = new Date(now);
     date.setDate(now.getDate() - (days - 1 - i));
-    return {
-      date,
-      quantity: Math.floor(Math.random() * 100)
-    };
+    return date;
   });
 };
 
 export default function Home() {
   const [viewMode, setViewMode] = useState<'weekly' | 'monthly'>('weekly');
-  const [total, setTotal] = useState([{ date: new Date(), quantity: 0 }]);
+  const { 
+    problems, 
+    addProblem, 
+    getPointsByType, 
+    getTotalPoints 
+  } = useMathStore();
+  
+  // Get problem types
+  const problemTypes: MathProblemType[] = ['integration', 'differentiation', 'trigonometric', 'mechanics', 'physics'];
   
   // Generate chart data based on view mode
   const chartData = useMemo(() => {
-    const data = viewMode === 'weekly' ? 
-      generateMockData(7).concat(total) : 
-      generateMockData(30).concat(total);
+    const days = viewMode === 'weekly' ? 7 : 30;
+    const dates = getLastNDaysData(days);
+    
+    return dates.map(date => {
+      const dateStr = date.toISOString().split('T')[0];
+      const dayProblems = problems.filter(p => p.date.startsWith(dateStr));
+      const totalPoints = dayProblems.reduce((sum, p) => sum + p.points, 0);
       
-    return data.map((item) => ({
-      date: item.date,
-      name: viewMode === 'weekly' ? formatDay(item.date) : item.date.getDate().toString(),
-      time: viewMode === 'weekly' ? formatDay(item.date) : formatDate(item.date),
-      quantity: item.quantity,
-    }));
-  }, [total, viewMode]);
+      return {
+        date,
+        name: viewMode === 'weekly' ? formatDay(date) : date.getDate().toString(),
+        time: viewMode === 'weekly' ? formatDay(date) : formatDate(date),
+        quantity: totalPoints,
+      };
+    });
+  }, [problems, viewMode]);
 
   return (
     <div className="p-6 space-y-6">
@@ -160,35 +171,38 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Buttons */}
-      <div className="flex items-center gap-4">
-        <Button
-          onClick={() =>
-            setTotal([
-              ...total,
-              { date: new Date(), quantity: total[total.length - 1].quantity + 1 },
-            ])
-          }
-          className="bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          Increase quantity
-        </Button>
-        <Button
-          onClick={() =>
-            setTotal([
-              ...total,
-              { date: new Date(), quantity: Math.max(0, total[total.length - 1].quantity - 1) },
-            ])
-          }
-          variant="outline"
-        >
-          Decrease quantity
-        </Button>
-      </div>
-
-      {/* Current Value */}
-      <div className="text-lg">
-        Current quantity: <span className="font-bold">{total[total.length - 1].quantity}</span>
+      {/* Problem Type Buttons */}
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {problemTypes.map((type) => (
+            <Button
+              key={type}
+              onClick={() => addProblem(type)}
+              className="capitalize"
+              variant="outline"
+            >
+              {type}
+              <span className="ml-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
+                {getPointsByType(type)}
+              </span>
+            </Button>
+          ))}
+        </div>
+        
+        {/* Stats */}
+        <div className="flex flex-wrap items-center gap-4 pt-2">
+          <div className="bg-muted px-4 py-2 rounded-lg">
+            <p className="text-sm text-muted-foreground">Total Points</p>
+            <p className="text-xl font-semibold">{getTotalPoints()}</p>
+          </div>
+          
+          {problemTypes.map((type) => (
+            <div key={type} className="bg-muted px-3 py-1.5 rounded-lg text-sm">
+              <span className="capitalize">{type}: </span>
+              <span className="font-medium">{getPointsByType(type)}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

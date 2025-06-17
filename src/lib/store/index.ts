@@ -7,7 +7,14 @@ import authReducer from './slices/authSlice';
 import uiReducer from './slices/uiSlice';
 
 // Export the math store
-import { useMathStore, getAllProblemTypes, getPointsForAllTypes } from './mathStore';
+import { 
+  useMathStore, 
+  getAllProblemTypes, 
+  getPointsForAllTypes,
+  MathProblemType 
+} from './mathStore';
+
+export type { MathProblemType };
 
 const rootReducer = combineReducers({
   userPreferences: userPreferencesReducer,
