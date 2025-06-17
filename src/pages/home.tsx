@@ -22,6 +22,7 @@ export default function Home() {
   const { 
     problems, 
     addProblem, 
+    removeLastProblem,
     getPointsByType, 
     getTotalPoints 
   } = useMathStore();
@@ -187,6 +188,14 @@ export default function Home() {
               </span>
             </Button>
           ))}
+          <Button
+            onClick={removeLastProblem}
+            variant="outline"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive col-span-2 md:col-span-1"
+            disabled={problems.length === 0}
+          >
+            Remove Last
+          </Button>
         </div>
         
         {/* Stats */}

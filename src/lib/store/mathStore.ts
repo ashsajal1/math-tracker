@@ -14,6 +14,7 @@ interface MathStore {
   problems: MathProblem[];
   addProblem: (type: MathProblemType, points?: number) => void;
   removeProblem: (id: string) => void;
+  removeLastProblem: () => void;
   updateProblem: (id: string, updates: Partial<MathProblem>) => void;
   getProblemsByType: (type: MathProblemType) => MathProblem[];
   getTotalPoints: () => number;
@@ -40,14 +41,23 @@ export const useMathStore = create<MathStore>()(
       
       removeProblem: (id) => {
         set((state) => ({
-          problems: state.problems.filter((problem) => problem.id !== id),
+          problems: state.problems.filter((p) => p.id !== id),
         }));
+      },
+      
+      removeLastProblem: () => {
+        set((state) => {
+          if (state.problems.length === 0) return state;
+          const problems = [...state.problems];
+          problems.pop();
+          return { problems };
+        });
       },
       
       updateProblem: (id, updates) => {
         set((state) => ({
-          problems: state.problems.map((problem) =>
-            problem.id === id ? { ...problem, ...updates } : problem
+          problems: state.problems.map((p) =>
+            p.id === id ? { ...p, ...updates } : p
           ),
         }));
       },
