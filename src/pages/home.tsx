@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Switch } from "@/components/ui/switch";
 
 // Format date for display
 const formatDate = (date: Date) => date.toLocaleDateString();
@@ -41,59 +40,121 @@ export default function Home() {
   return (
     <div className="p-6 space-y-6">
       {/* Graph Section */}
-      <div className="bg-white p-4 rounded-lg shadow">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">
-            {viewMode === 'weekly' ? 'Weekly' : 'Monthly'} Quantity Trend
-          </h2>
-          <div className="flex items-center space-x-2">
-            <span className={`text-sm font-medium ${viewMode === 'weekly' ? 'text-blue-600' : 'text-gray-500'}`}>
-              Weekly
-            </span>
-            <Switch
-              id="view-mode"
-              checked={viewMode === 'monthly'}
-              onCheckedChange={(checked) => setViewMode(checked ? 'monthly' : 'weekly')}
-              className="data-[state=checked]:bg-blue-600"
-            />
-            <span className={`text-sm font-medium ${viewMode === 'monthly' ? 'text-blue-600' : 'text-gray-500'}`}>
-              Monthly
-            </span>
+      <div className="bg-card p-6 rounded-lg shadow-sm border">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">
+              {viewMode === 'weekly' ? 'Weekly' : 'Monthly'} Quantity Trend
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Track your quantity changes over time
+            </p>
+          </div>
+          <div className="flex items-center space-x-2 bg-muted p-1 rounded-lg">
+            <button
+              onClick={() => setViewMode('weekly')}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                viewMode === 'weekly' 
+                  ? 'bg-background text-foreground shadow-sm' 
+                  : 'text-muted-foreground hover:text-foreground/80'
+              }`}
+            >
+              Week
+            </button>
+            <button
+              onClick={() => setViewMode('monthly')}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                viewMode === 'monthly'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground/80'
+              }`}
+            >
+              Month
+            </button>
           </div>
         </div>
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <LineChart 
+              data={chartData} 
+              margin={{ top: 10, right: 10, left: -15, bottom: 5 }}
+            >
+              <defs>
+                <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.8}/>
+                  <stop offset="100%" stopColor="#6366f1" stopOpacity={0.1}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid 
+                vertical={false} 
+                strokeDasharray="3 3" 
+                className="stroke-border"
+              />
               <XAxis 
                 dataKey="name"
-                tick={{ fontSize: 12 }}
+                tick={{ 
+                  fontSize: 12,
+                  fill: 'hsl(var(--muted-foreground))',
+                }}
                 tickLine={false}
-                axisLine={{ stroke: '#e5e7eb' }}
+                axisLine={false}
+                padding={{ left: 10, right: 10 }}
+                className="text-xs"
               />
               <YAxis 
                 tickLine={false}
-                axisLine={{ stroke: '#e5e7eb' }}
-                tickFormatter={(value) => value.toFixed(0)}
+                axisLine={false}
+                tick={{ 
+                  fontSize: 12,
+                  fill: 'hsl(var(--muted-foreground))',
+                }}
+                tickFormatter={(value) => `${value}`}
+                width={30}
               />
               <Tooltip 
-                contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '0.5rem',
-                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                content={({ active, payload, label }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
+                        <p className="font-medium text-foreground">{label}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Quantity: <span className="text-foreground font-medium">{payload[0].value}</span>
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
                 }}
-                formatter={(value: number) => [`${value} units`, 'Quantity']}
-                labelFormatter={(label) => `Date: ${label}`}
               />
               <Line 
                 type="monotone" 
                 dataKey="quantity" 
-                stroke="#4f46e5" 
+                stroke="#6366f1" 
                 strokeWidth={2}
-                dot={{ r: 4, stroke: '#4f46e5', strokeWidth: 2, fill: 'white' }}
-                activeDot={{ r: 6, stroke: '#4338ca', strokeWidth: 2, fill: 'white' }}
-              />
+                dot={{
+                  r: 4,
+                  stroke: 'hsl(var(--background))',
+                  strokeWidth: 2,
+                  fill: 'hsl(var(--primary))',
+                  className: 'shadow-md'
+                }}
+                activeDot={{
+                  r: 6,
+                  stroke: 'hsl(var(--background))',
+                  strokeWidth: 2,
+                  fill: 'hsl(var(--primary))',
+                  className: 'shadow-lg'
+                }}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <animate
+                  attributeName="opacity"
+                  values="0;1"
+                  dur="1s"
+                  fill="freeze"
+                />
+              </Line>
             </LineChart>
           </ResponsiveContainer>
         </div>
