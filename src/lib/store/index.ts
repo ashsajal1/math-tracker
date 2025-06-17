@@ -6,6 +6,9 @@ import userPreferencesReducer from './slices/userPreferencesSlice';
 import authReducer from './slices/authSlice';
 import uiReducer from './slices/uiSlice';
 
+// Export the math store
+import { useMathStore, getAllProblemTypes, getPointsForAllTypes } from './mathStore';
+
 const rootReducer = combineReducers({
   userPreferences: userPreferencesReducer,
   auth: authReducer,
@@ -41,4 +44,7 @@ export type AppDispatch = typeof store.dispatch;
 
 // Use throughout your app instead of plain `useDispatch` and `useSelector`
 export const useAppDispatch: () => AppDispatch = useDispatch;
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector; 
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+
+// Export math store utilities
+export { useMathStore, getAllProblemTypes, getPointsForAllTypes }; 
