@@ -38,7 +38,7 @@ export default function Home() {
   } = useMathStore();
   
   // Get problem types
-  const problemTypes: MathProblemType[] = ['integration', 'differentiation', 'trigonometric', 'mechanics', 'physics'];
+  const problemTypes: MathProblemType[] = ['integration', 'differentiation', 'trigonometric', 'mechanics', 'physics', 'ict', 'others'];
   
   // Generate chart data based on view mode
   const chartData = useMemo(() => {

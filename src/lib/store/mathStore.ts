@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-export type MathProblemType = 'integration' | 'differentiation' | 'trigonometric' | 'mechanics' | 'physics';
+export type MathProblemType = 'integration' | 'differentiation' | 'trigonometric' | 'mechanics' | 'physics' | 'ict' | 'others';
 
 export interface MathProblem {
   id: string;
@@ -106,5 +106,7 @@ export const getPointsForAllTypes = (): Record<MathProblemType, number> => {
     trigonometric: store.getPointsByType('trigonometric'),
     mechanics: store.getPointsByType('mechanics'),
     physics: store.getPointsByType('physics'),
+    ict: store.getPointsByType('ict'),
+    others: store.getPointsByType('others'),
   };
 };
