@@ -2,6 +2,11 @@ import { Button } from "@/components/ui/button";
 import { useMemo, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useMathStore, MathProblemType } from "@/lib/store";
+import { motion } from "framer-motion";
+import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { ArrowUp, ArrowDown, Award, Brain, Target } from "lucide-react";
 
 // Format date for display
 const formatDate = (date: Date) => date.toLocaleDateString();
@@ -15,6 +20,11 @@ const getLastNDaysData = (days: number) => {
     date.setDate(now.getDate() - (days - 1 - i));
     return date;
   });
+};
+
+// Calculate progress percentage
+const calculateProgress = (current: number, target = 100) => {
+  return Math.min((current / target) * 100, 100);
 };
 
 export default function Home() {
@@ -49,43 +59,117 @@ export default function Home() {
     });
   }, [problems, viewMode]);
 
+  // Calculate trend
+  const trend = useMemo(() => {
+    if (chartData.length < 2) return 0;
+    const latest = chartData[chartData.length - 1].quantity;
+    const previous = chartData[chartData.length - 2].quantity;
+    return ((latest - previous) / (previous || 1)) * 100;
+  }, [chartData]);
+
   return (
-    <div className="p-6 space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="p-6 space-y-8 max-w-7xl mx-auto"
+    >
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="p-6 space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-muted-foreground">Total Points</p>
+            <Award className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex items-baseline justify-between">
+            <h3 className="text-2xl font-bold">{getTotalPoints()}</h3>
+            <div className={`flex items-center text-sm ${trend >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {trend >= 0 ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+              <span className="ml-1">{Math.abs(trend).toFixed(1)}%</span>
+            </div>
+          </div>
+          <Progress value={calculateProgress(getTotalPoints())} className="h-1" />
+        </Card>
+
+        <Card className="p-6 space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-muted-foreground">Problems Today</p>
+            <Brain className="h-4 w-4 text-primary" />
+          </div>
+          <h3 className="text-2xl font-bold">
+            {problems.filter(p => p.date.startsWith(new Date().toISOString().split('T')[0])).length}
+          </h3>
+          <Progress 
+            value={calculateProgress(
+              problems.filter(p => p.date.startsWith(new Date().toISOString().split('T')[0])).length,
+              10
+            )} 
+            className="h-1" 
+          />
+        </Card>
+
+        <Card className="p-6 space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-muted-foreground">Streak</p>
+            <Target className="h-4 w-4 text-primary" />
+          </div>
+          <h3 className="text-2xl font-bold">7 days</h3>
+          <Progress value={70} className="h-1" />
+        </Card>
+
+        <Card className="p-6">
+          <p className="text-sm font-medium text-muted-foreground mb-2">Top Category</p>
+          <div className="space-y-4">
+            {problemTypes.slice(0, 2).map((type) => (
+              <div key={type} className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="capitalize">{type}</span>
+                  <span className="font-medium">{getPointsByType(type)}</span>
+                </div>
+                <Progress value={calculateProgress(getPointsByType(type), getTotalPoints())} className="h-1" />
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
       {/* Graph Section */}
-      <div className="bg-card p-6 rounded-lg shadow-sm border">
+      <Card className="p-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div>
             <h2 className="text-xl font-semibold text-foreground">
-              {viewMode === 'weekly' ? 'Weekly' : 'Monthly'} Quantity Trend
+              {viewMode === 'weekly' ? 'Weekly' : 'Monthly'} Progress
             </h2>
             <p className="text-sm text-muted-foreground">
-              Track your quantity changes over time
+              Track your learning journey over time
             </p>
           </div>
-          <div className="flex items-center space-x-2 bg-muted p-1 rounded-lg">
-            <button
+          <div className="flex items-center space-x-2 bg-muted/50 p-1 rounded-lg">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={() => setViewMode('weekly')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
                 viewMode === 'weekly' 
                   ? 'bg-background text-foreground shadow-sm' 
                   : 'text-muted-foreground hover:text-foreground/80'
               }`}
             >
               Week
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={() => setViewMode('monthly')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
                 viewMode === 'monthly'
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground/80'
               }`}
             >
               Month
-            </button>
+            </motion.button>
           </div>
         </div>
-        <div className="h-80 w-full">
+        <div className="h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart 
               data={chartData} 
@@ -93,14 +177,14 @@ export default function Home() {
             >
               <defs>
                 <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.8}/>
-                  <stop offset="100%" stopColor="#6366f1" stopOpacity={0.1}/>
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid 
                 vertical={false} 
                 strokeDasharray="3 3" 
-                className="stroke-border"
+                className="stroke-muted"
               />
               <XAxis 
                 dataKey="name"
@@ -127,10 +211,10 @@ export default function Home() {
                 content={({ active, payload, label }) => {
                   if (active && payload && payload.length) {
                     return (
-                      <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
+                      <div className="bg-background border rounded-lg p-3 shadow-lg">
                         <p className="font-medium text-foreground">{label}</p>
                         <p className="text-sm text-muted-foreground">
-                          Quantity: <span className="text-foreground font-medium">{payload[0].value}</span>
+                          Points: <span className="text-foreground font-medium">{payload[0].value}</span>
                         </p>
                       </div>
                     );
@@ -141,78 +225,72 @@ export default function Home() {
               <Line 
                 type="monotone" 
                 dataKey="quantity" 
-                stroke="#6366f1" 
+                stroke="hsl(var(--primary))" 
                 strokeWidth={2}
+                fill="url(#lineGradient)"
                 dot={{
                   r: 4,
                   stroke: 'hsl(var(--background))',
                   strokeWidth: 2,
                   fill: 'hsl(var(--primary))',
-                  className: 'shadow-md'
+                  className: 'shadow-sm'
                 }}
                 activeDot={{
                   r: 6,
                   stroke: 'hsl(var(--background))',
                   strokeWidth: 2,
                   fill: 'hsl(var(--primary))',
-                  className: 'shadow-lg'
+                  className: 'shadow-md'
                 }}
                 strokeLinecap="round"
                 strokeLinejoin="round"
-              >
-                <animate
-                  attributeName="opacity"
-                  values="0;1"
-                  dur="1s"
-                  fill="freeze"
-                />
-              </Line>
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </Card>
 
       {/* Problem Type Buttons */}
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {problemTypes.map((type) => (
-            <Button
-              key={type}
-              onClick={() => addProblem(type)}
-              className="capitalize"
-              variant="outline"
-            >
-              {type}
-              <span className="ml-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
-                {getPointsByType(type)}
-              </span>
-            </Button>
-          ))}
-          <Button
-            onClick={removeLastProblem}
-            variant="outline"
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive col-span-2 md:col-span-1"
-            disabled={problems.length === 0}
-          >
-            Remove Last
-          </Button>
-        </div>
-        
-        {/* Stats */}
-        <div className="flex flex-wrap items-center gap-4 pt-2">
-          <div className="bg-muted px-4 py-2 rounded-lg">
-            <p className="text-sm text-muted-foreground">Total Points</p>
-            <p className="text-xl font-semibold">{getTotalPoints()}</p>
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Add Problems</h3>
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {problemTypes.map((type) => (
+              <motion.div key={type} whileTap={{ scale: 0.97 }}>
+                <Button
+                  onClick={() => addProblem(type)}
+                  className="w-full capitalize group relative overflow-hidden"
+                  variant="outline"
+                >
+                  <span className="relative z-10">{type}</span>
+                  <Badge 
+                    variant="secondary" 
+                    className="ml-2 bg-primary/10 text-primary absolute right-2 top-1/2 -translate-y-1/2"
+                  >
+                    {getPointsByType(type)}
+                  </Badge>
+                  <div 
+                    className="absolute inset-0 bg-primary/5 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"
+                    style={{
+                      transform: `scaleX(${calculateProgress(getPointsByType(type), getTotalPoints()) / 100})`,
+                    }}
+                  />
+                </Button>
+              </motion.div>
+            ))}
+            <motion.div whileTap={{ scale: 0.97 }} className="col-span-2 md:col-span-1">
+              <Button
+                onClick={removeLastProblem}
+                variant="outline"
+                className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                disabled={problems.length === 0}
+              >
+                Remove Last
+              </Button>
+            </motion.div>
           </div>
-          
-          {problemTypes.map((type) => (
-            <div key={type} className="bg-muted px-3 py-1.5 rounded-lg text-sm">
-              <span className="capitalize">{type}: </span>
-              <span className="font-medium">{getPointsByType(type)}</span>
-            </div>
-          ))}
         </div>
-      </div>
-    </div>
+      </Card>
+    </motion.div>
   );
 }
