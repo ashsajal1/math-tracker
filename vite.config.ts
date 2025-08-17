@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
       manifest: {
-        name: "React TSX Tailwind Template",
-        short_name: "ReactTTT PWA",
+        name: "Math Tracker",
+        short_name: "MathTracker",
         theme_color: "#ffffff",
         icons: [
           {
