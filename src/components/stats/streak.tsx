@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Target } from "lucide-react";
 import { useMathStore } from "@/lib/store";
+import NewStreakCongrats from "@/components/new-streak-congrats";
 
 type StreakCardProps = {
   goalDays?: number; // for progress bar, default 30
@@ -24,6 +25,9 @@ const toLocalDateKey = (d: Date) => {
 
 export default function StreakCard({ goalDays = 30 }: StreakCardProps) {
   const { problems } = useMathStore();
+  const [showCongrats, setShowCongrats] = useState(false);
+  const timerRef = useRef<number | null>(null);
+  const prevStreakRef = useRef(0);
 
   const { streak, percentage } = useMemo(() => {
     // Build a set of unique local-date keys (YYYY-MM-DD) from problems
@@ -44,16 +48,51 @@ export default function StreakCard({ goalDays = 30 }: StreakCardProps) {
     return { streak: count, percentage: pct };
   }, [problems, goalDays]);
 
+  // When streak increases by exactly 1, show congrats after 3s
+  useEffect(() => {
+    const key = "last_shown_streak_v2";
+    const lastShown = Number(localStorage.getItem(key) || 0);
+    const prev = prevStreakRef.current;
+
+    if (streak === prev + 1 && streak > lastShown) {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = window.setTimeout(() => {
+        setShowCongrats(true);
+        localStorage.setItem(key, String(streak));
+      }, 3000);
+    } else if (streak > lastShown + 1) {
+      // If user jumped more than 1 (backfill), sync without showing
+      localStorage.setItem(key, String(streak));
+    }
+
+    prevStreakRef.current = streak;
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [streak]);
+
   return (
-    <Card className="p-3 sm:p-6 space-y-2">
-      <div className="flex items-center justify-between">
-        <p className="text-xs sm:text-sm font-medium text-muted-foreground">
+    <>
+      <Card className="p-3 sm:p-6">
+        <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-2">
           Streak
         </p>
-        <Target className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
-      </div>
-      <h3 className="text-lg sm:text-2xl font-bold">{streak} days</h3>
-      <Progress value={percentage} className="h-1" />
-    </Card>
+        <div className="flex items-center justify-between text-2xl sm:text-3xl font-bold">
+          <div className="flex items-center gap-2">
+            <Target className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+            <span>{streak} days</span>
+          </div>
+          <span className="text-sm text-muted-foreground">{percentage}%</span>
+        </div>
+        <Progress value={percentage} className="mt-2 h-1" />
+      </Card>
+      <NewStreakCongrats
+        visible={showCongrats}
+        day={streak}
+        onClose={() => setShowCongrats(false)}
+        autoHideMs={2000}
+      />
+    </>
   );
 }
