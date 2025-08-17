@@ -80,8 +80,7 @@ export const useMathStore = create<MathStore>()(
 
       getPointsByType: (type) => {
         return get()
-          .problems
-          .filter(
+          .problems.filter(
             (problem) =>
               problem.type.subject === type.subject &&
               problem.type.topic === type.topic
@@ -124,7 +123,47 @@ export const getAllProblemTypes = (): MathProblemType[] => [
   },
   {
     subject: "Physics",
-    topic: "Electronics",
+    topic: "Physics 1st Paper",
+  },
+  {
+    subject: "Physics",
+    topic: "Physics 2nd Paper",
+  },
+  {
+    subject: "ICT",
+    topic: "Coding & HTML",
+  },
+  {
+    subject: "ICT",
+    topic: "Number system & Digital Device",
+  },
+  {
+    subject: "Biology",
+    topic: "Biology 1st Paper",
+  },
+  {
+    subject: "Biology",
+    topic: "Biology 2nd Paper",
+  },
+  {
+    subject: "Bangla Grammer",
+    topic: "Bangla Grammer",
+  },
+  {
+    subject: "English Grammer",
+    topic: "English Grammer",
+  },
+  {
+    subject: "Chemistry",
+    topic: "Organic Chemistry",
+  },
+  {
+    subject: "Chemistry",
+    topic: "Inorganic Chemistry",
+  },
+  {
+    subject: "Chemistry",
+    topic: "Chemistry 1st Paper",
   },
 ];
 
