@@ -1,8 +1,11 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { v4 as uuidv4 } from 'uuid';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { v4 as uuidv4 } from "uuid";
 
-export type MathProblemType = 'integration' | 'differentiation' | 'trigonometric' | 'mechanics' | 'physics' | 'ict' | 'others';
+export type MathProblemType = {
+  subject: string;
+  topic: string;
+};
 
 export interface MathProblem {
   id: string;
@@ -27,7 +30,7 @@ export const useMathStore = create<MathStore>()(
   persist(
     (set, get) => ({
       problems: [],
-      
+
       addProblem: (type, points = 5) => {
         const newProblem: MathProblem = {
           id: uuidv4(),
@@ -39,13 +42,13 @@ export const useMathStore = create<MathStore>()(
           problems: [...state.problems, newProblem],
         }));
       },
-      
+
       removeProblem: (id) => {
         set((state) => ({
           problems: state.problems.filter((p) => p.id !== id),
         }));
       },
-      
+
       removeLastProblem: () => {
         set((state) => {
           if (state.problems.length === 0) return state;
@@ -54,7 +57,7 @@ export const useMathStore = create<MathStore>()(
           return { problems };
         });
       },
-      
+
       updateProblem: (id, updates) => {
         set((state) => ({
           problems: state.problems.map((p) =>
@@ -62,28 +65,36 @@ export const useMathStore = create<MathStore>()(
           ),
         }));
       },
-      
+
       getProblemsByType: (type) => {
-        return get().problems.filter((problem) => problem.type === type);
+        return get().problems.filter(
+          (problem) =>
+            problem.type.subject === type.subject &&
+            problem.type.topic === type.topic
+        );
       },
-      
+
       getTotalPoints: () => {
         return get().problems.reduce((sum, problem) => sum + problem.points, 0);
       },
-      
+
       getPointsByType: (type) => {
         return get()
           .problems
-          .filter((problem) => problem.type === type)
+          .filter(
+            (problem) =>
+              problem.type.subject === type.subject &&
+              problem.type.topic === type.topic
+          )
           .reduce((sum, problem) => sum + problem.points, 0);
       },
-      
+
       clearAll: () => {
         set({ problems: [] });
       },
     }),
     {
-      name: 'math-tracker-storage', // unique name for localStorage key
+      name: "math-tracker-storage", // unique name for localStorage key
       storage: createJSONStorage(() => localStorage), // use localStorage
     }
   )
@@ -91,23 +102,41 @@ export const useMathStore = create<MathStore>()(
 
 // Utility function to get all problem types
 export const getAllProblemTypes = (): MathProblemType[] => [
-  'integration',
-  'differentiation',
-  'trigonometric',
-  'mechanics',
-  'physics',
+  {
+    subject: "Mathematics",
+    topic: "Calculas",
+  },
+  {
+    subject: "Mathematics",
+    topic: "Trigonometry",
+  },
+  {
+    subject: "Mathematics",
+    topic: "Algebra",
+  },
+  {
+    subject: "Mathematics",
+    topic: "Mechanics/Dynamics",
+  },
+  {
+    subject: "Mathematics",
+    topic: "Geometry",
+  },
+  {
+    subject: "Physics",
+    topic: "Electronics",
+  },
 ];
 
 // Utility function to get points for all types
-export const getPointsForAllTypes = (): Record<MathProblemType, number> => {
+// Returns an object keyed by "<subject>:<topic>" with total points per type
+export const getPointsForAllTypes = (): Record<string, number> => {
   const store = useMathStore.getState();
-  return {
-    integration: store.getPointsByType('integration'),
-    differentiation: store.getPointsByType('differentiation'),
-    trigonometric: store.getPointsByType('trigonometric'),
-    mechanics: store.getPointsByType('mechanics'),
-    physics: store.getPointsByType('physics'),
-    ict: store.getPointsByType('ict'),
-    others: store.getPointsByType('others'),
-  };
+  const types = getAllProblemTypes();
+  const totals: Record<string, number> = {};
+  for (const t of types) {
+    const key = `${t.subject}:${t.topic}`;
+    totals[key] = store.getPointsByType(t);
+  }
+  return totals;
 };
