@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowUp, ArrowDown, Award, Brain, Target } from "lucide-react";
 import HistoryList from "@/components/history";
 import CreateWork from "@/components/history/create";
+import StatsSection from "@/components/stats";
 
 // Format date for display
 const formatDate = (date: Date) => date.toLocaleDateString();
@@ -79,99 +80,7 @@ export default function Home() {
       className="p-6 space-y-8 max-w-7xl mx-auto"
     >
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-        <Card className="p-3 sm:p-6 space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Total Points
-            </p>
-            <Award className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
-          </div>
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-lg sm:text-2xl font-bold">
-              {getTotalPoints()}
-            </h3>
-            <div
-              className={`flex items-center text-xs sm:text-sm ${
-                trend >= 0 ? "text-green-500" : "text-red-500"
-              }`}
-            >
-              {trend >= 0 ? (
-                <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4" />
-              ) : (
-                <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4" />
-              )}
-              <span className="ml-1">{Math.abs(trend).toFixed(1)}%</span>
-            </div>
-          </div>
-          <Progress
-            value={calculateProgress(getTotalPoints())}
-            className="h-1"
-          />
-        </Card>
-
-        <Card className="p-3 sm:p-6 space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Problems Today
-            </p>
-            <Brain className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
-          </div>
-          <h3 className="text-lg sm:text-2xl font-bold">
-            {
-              problems.filter((p) =>
-                p.date.startsWith(new Date().toISOString().split("T")[0])
-              ).length
-            }
-          </h3>
-          <Progress
-            value={calculateProgress(
-              problems.filter((p) =>
-                p.date.startsWith(new Date().toISOString().split("T")[0])
-              ).length,
-              10
-            )}
-            className="h-1"
-          />
-        </Card>
-
-        <Card className="p-3 sm:p-6 space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Streak
-            </p>
-            <Target className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
-          </div>
-          <h3 className="text-lg sm:text-2xl font-bold">7 days</h3>
-          <Progress value={70} className="h-1" />
-        </Card>
-
-        <Card className="p-3 sm:p-6">
-          <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-2">
-            Top Category
-          </p>
-          <div className="space-y-2 sm:space-y-4">
-            {problemTypes.slice(0, 2).map((type) => (
-              <div
-                key={`${type.subject}:${type.topic}`}
-                className="space-y-1 sm:space-y-2"
-              >
-                <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="capitalize">{type.topic}</span>
-                  <span className="font-medium">{getPointsByType(type)}</span>
-                </div>
-                <Progress
-                  value={calculateProgress(
-                    getPointsByType(type),
-                    getTotalPoints()
-                  )}
-                  className="h-1"
-                />
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
+      <StatsSection />
 
       {/* Graph Section */}
       <Card className="p-6">
