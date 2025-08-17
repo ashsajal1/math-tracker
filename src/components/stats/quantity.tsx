@@ -22,13 +22,16 @@ export default function QuantityCard({ problemsGoal = 10, pointsGoal = 50 }: Qua
   }, [problems, today]);
 
   // Dynamic goals:
-  // - Problems: next multiple of 10 (min 10), using provided problemsGoal as a minimum
+  // - Problems: segment of 10 that advances at the exact peak. Example:
+  //   0–9 => 10, 10 => 20, 11–19 => 20, 20 => 30, etc. (min 10), using provided problemsGoal as a minimum
   // - Points: align with problems goal at 5 points per problem, using provided pointsGoal as a minimum
-  const dynamicProblemsGoal = Math.max(
-    problemsGoal,
-    10,
-    Math.ceil(Math.max(countToday, 1) / 10) * 10
-  );
+  const nextSegment = (() => {
+    if (countToday > 0 && countToday % 10 === 0) {
+      return countToday + 10; // advance when hitting exact peak
+    }
+    return Math.ceil(Math.max(countToday, 1) / 10) * 10; // otherwise normal ceiling
+  })();
+  const dynamicProblemsGoal = Math.max(problemsGoal, 10, nextSegment);
   const dynamicPointsGoal = Math.max(pointsGoal, dynamicProblemsGoal * 5);
 
   const problemsProgress = Math.min(100, Math.round((countToday / dynamicProblemsGoal) * 100));
