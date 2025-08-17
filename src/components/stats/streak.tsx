@@ -25,7 +25,7 @@ export default function StreakCard() {
   const timerRef = useRef<number | null>(null);
   const prevStreakRef = useRef(0);
 
-  const { streak, percentage } = useMemo(() => {
+  const { streak, percentage, goal } = useMemo(() => {
     // Build a set of unique local-date keys (YYYY-MM-DD) from problems
     const days = new Set<string>(
       problems.map((p) => toLocalDateKey(new Date(p.date)))
@@ -50,7 +50,7 @@ export default function StreakCard() {
     })();
     const dynamicGoal = Math.max(7, nextStreakSegment);
     const pct = Math.min(100, Math.round((count / dynamicGoal) * 100));
-    return { streak: count, percentage: pct };
+    return { streak: count, percentage: pct, goal: dynamicGoal };
   }, [problems]);
 
   // When streak increases by exactly 1, show congrats after 3s
@@ -88,7 +88,7 @@ export default function StreakCard() {
             <Target className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             <span>{streak} days</span>
           </div>
-          <span className="text-sm text-muted-foreground">{percentage}%</span>
+          <span className="text-sm text-primary font-semibold">{streak}/{goal}</span>
         </div>
         <Progress value={percentage} className="mt-2 h-1" />
       </Card>
