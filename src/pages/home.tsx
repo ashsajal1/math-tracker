@@ -1,15 +1,25 @@
 import { useMemo, useState } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { useMathStore, MathProblemType, getAllProblemTypes } from "@/lib/store";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ArrowUp, ArrowDown, Award, Brain, Target } from "lucide-react";
 import HistoryList from "@/components/history";
+import CreateWork from "@/components/history/create";
 
 // Format date for display
 const formatDate = (date: Date) => date.toLocaleDateString();
-const formatDay = (date: Date) => date.toLocaleDateString('en-US', { weekday: 'short' });
+const formatDay = (date: Date) =>
+  date.toLocaleDateString("en-US", { weekday: "short" });
 
 // Get last N days data
 const getLastNDaysData = (days: number) => {
@@ -27,30 +37,27 @@ const calculateProgress = (current: number, target = 100) => {
 };
 
 export default function Home() {
-  const [viewMode, setViewMode] = useState<'weekly' | 'monthly'>('weekly');
-  const { 
-    problems, 
-    getPointsByType, 
-    getTotalPoints 
-  } = useMathStore();
-  
+  const [viewMode, setViewMode] = useState<"weekly" | "monthly">("weekly");
+  const { problems, getPointsByType, getTotalPoints } = useMathStore();
+
   // Get problem types
   const problemTypes: MathProblemType[] = getAllProblemTypes();
-  
+
   // Generate chart data based on view mode
   const chartData = useMemo(() => {
-    const days = viewMode === 'weekly' ? 7 : 30;
+    const days = viewMode === "weekly" ? 7 : 30;
     const dates = getLastNDaysData(days);
-    
-    return dates.map(date => {
-      const dateStr = date.toISOString().split('T')[0];
-      const dayProblems = problems.filter(p => p.date.startsWith(dateStr));
+
+    return dates.map((date) => {
+      const dateStr = date.toISOString().split("T")[0];
+      const dayProblems = problems.filter((p) => p.date.startsWith(dateStr));
       const totalPoints = dayProblems.reduce((sum, p) => sum + p.points, 0);
-      
+
       return {
         date,
-        name: viewMode === 'weekly' ? formatDay(date) : date.getDate().toString(),
-        time: viewMode === 'weekly' ? formatDay(date) : formatDate(date),
+        name:
+          viewMode === "weekly" ? formatDay(date) : date.getDate().toString(),
+        time: viewMode === "weekly" ? formatDay(date) : formatDate(date),
         quantity: totalPoints,
       };
     });
@@ -65,7 +72,7 @@ export default function Home() {
   }, [chartData]);
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -75,39 +82,64 @@ export default function Home() {
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <Card className="p-3 sm:p-6 space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Points</p>
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground">
+              Total Points
+            </p>
             <Award className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
           </div>
           <div className="flex items-baseline justify-between">
-            <h3 className="text-lg sm:text-2xl font-bold">{getTotalPoints()}</h3>
-            <div className={`flex items-center text-xs sm:text-sm ${trend >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              {trend >= 0 ? <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4" /> : <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4" />}
+            <h3 className="text-lg sm:text-2xl font-bold">
+              {getTotalPoints()}
+            </h3>
+            <div
+              className={`flex items-center text-xs sm:text-sm ${
+                trend >= 0 ? "text-green-500" : "text-red-500"
+              }`}
+            >
+              {trend >= 0 ? (
+                <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4" />
+              ) : (
+                <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4" />
+              )}
               <span className="ml-1">{Math.abs(trend).toFixed(1)}%</span>
             </div>
           </div>
-          <Progress value={calculateProgress(getTotalPoints())} className="h-1" />
-        </Card>
-
-        <Card className="p-3 sm:p-6 space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground">Problems Today</p>
-            <Brain className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
-          </div>
-          <h3 className="text-lg sm:text-2xl font-bold">
-            {problems.filter(p => p.date.startsWith(new Date().toISOString().split('T')[0])).length}
-          </h3>
-          <Progress 
-            value={calculateProgress(
-              problems.filter(p => p.date.startsWith(new Date().toISOString().split('T')[0])).length,
-              10
-            )} 
-            className="h-1" 
+          <Progress
+            value={calculateProgress(getTotalPoints())}
+            className="h-1"
           />
         </Card>
 
         <Card className="p-3 sm:p-6 space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground">Streak</p>
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground">
+              Problems Today
+            </p>
+            <Brain className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
+          </div>
+          <h3 className="text-lg sm:text-2xl font-bold">
+            {
+              problems.filter((p) =>
+                p.date.startsWith(new Date().toISOString().split("T")[0])
+              ).length
+            }
+          </h3>
+          <Progress
+            value={calculateProgress(
+              problems.filter((p) =>
+                p.date.startsWith(new Date().toISOString().split("T")[0])
+              ).length,
+              10
+            )}
+            className="h-1"
+          />
+        </Card>
+
+        <Card className="p-3 sm:p-6 space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground">
+              Streak
+            </p>
             <Target className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
           </div>
           <h3 className="text-lg sm:text-2xl font-bold">7 days</h3>
@@ -115,15 +147,26 @@ export default function Home() {
         </Card>
 
         <Card className="p-3 sm:p-6">
-          <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-2">Top Category</p>
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-2">
+            Top Category
+          </p>
           <div className="space-y-2 sm:space-y-4">
             {problemTypes.slice(0, 2).map((type) => (
-              <div key={`${type.subject}:${type.topic}`} className="space-y-1 sm:space-y-2">
+              <div
+                key={`${type.subject}:${type.topic}`}
+                className="space-y-1 sm:space-y-2"
+              >
                 <div className="flex justify-between text-xs sm:text-sm">
                   <span className="capitalize">{type.topic}</span>
                   <span className="font-medium">{getPointsByType(type)}</span>
                 </div>
-                <Progress value={calculateProgress(getPointsByType(type), getTotalPoints())} className="h-1" />
+                <Progress
+                  value={calculateProgress(
+                    getPointsByType(type),
+                    getTotalPoints()
+                  )}
+                  className="h-1"
+                />
               </div>
             ))}
           </div>
@@ -135,7 +178,7 @@ export default function Home() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div>
             <h2 className="text-xl font-semibold text-foreground">
-              {viewMode === 'weekly' ? 'Weekly' : 'Monthly'} Progress
+              {viewMode === "weekly" ? "Weekly" : "Monthly"} Progress
             </h2>
             <p className="text-sm text-muted-foreground">
               Track your learning journey over time
@@ -144,22 +187,22 @@ export default function Home() {
           <div className="flex items-center space-x-2 bg-muted/50 p-1 rounded-lg">
             <motion.button
               whileTap={{ scale: 0.95 }}
-              onClick={() => setViewMode('weekly')}
+              onClick={() => setViewMode("weekly")}
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                viewMode === 'weekly' 
-                  ? 'bg-background text-foreground shadow-sm' 
-                  : 'text-muted-foreground hover:text-foreground/80'
+                viewMode === "weekly"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground/80"
               }`}
             >
               Week
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.95 }}
-              onClick={() => setViewMode('monthly')}
+              onClick={() => setViewMode("monthly")}
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                viewMode === 'monthly'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground/80'
+                viewMode === "monthly"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground/80"
               }`}
             >
               Month
@@ -168,50 +211,61 @@ export default function Home() {
         </div>
         <div className="h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart 
-              data={chartData} 
+            <LineChart
+              data={chartData}
               margin={{ top: 10, right: 10, left: -15, bottom: 5 }}
             >
               <defs>
                 <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  <stop
+                    offset="0%"
+                    stopColor="hsl(var(--primary))"
+                    stopOpacity={0.3}
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="hsl(var(--primary))"
+                    stopOpacity={0}
+                  />
                 </linearGradient>
               </defs>
-              <CartesianGrid 
-                vertical={false} 
-                strokeDasharray="3 3" 
+              <CartesianGrid
+                vertical={false}
+                strokeDasharray="3 3"
                 className="stroke-muted"
               />
-              <XAxis 
+              <XAxis
                 dataKey="name"
-                tick={{ 
+                tick={{
                   fontSize: 12,
-                  fill: 'hsl(var(--muted-foreground))',
+                  fill: "hsl(var(--muted-foreground))",
                 }}
                 tickLine={false}
                 axisLine={false}
                 padding={{ left: 10, right: 10 }}
                 className="text-xs"
               />
-              <YAxis 
+              <YAxis
                 tickLine={false}
                 axisLine={false}
-                tick={{ 
+                tick={{
                   fontSize: 12,
-                  fill: 'hsl(var(--muted-foreground))',
+                  fill: "hsl(var(--muted-foreground))",
                 }}
                 tickFormatter={(value) => `${value}`}
                 width={30}
               />
-              <Tooltip 
+              <Tooltip
                 content={({ active, payload, label }) => {
                   if (active && payload && payload.length) {
                     return (
                       <div className="bg-background border rounded-lg p-3 shadow-lg">
                         <p className="font-medium text-foreground">{label}</p>
                         <p className="text-sm text-muted-foreground">
-                          Points: <span className="text-foreground font-medium">{payload[0].value}</span>
+                          Points:{" "}
+                          <span className="text-foreground font-medium">
+                            {payload[0].value}
+                          </span>
                         </p>
                       </div>
                     );
@@ -219,25 +273,25 @@ export default function Home() {
                   return null;
                 }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="quantity" 
-                stroke="hsl(var(--primary))" 
+              <Line
+                type="monotone"
+                dataKey="quantity"
+                stroke="hsl(var(--primary))"
                 strokeWidth={2}
                 fill="url(#lineGradient)"
                 dot={{
                   r: 4,
-                  stroke: 'hsl(var(--background))',
+                  stroke: "hsl(var(--background))",
                   strokeWidth: 2,
-                  fill: 'hsl(var(--primary))',
-                  className: 'shadow-sm'
+                  fill: "hsl(var(--primary))",
+                  className: "shadow-sm",
                 }}
                 activeDot={{
                   r: 6,
-                  stroke: 'hsl(var(--background))',
+                  stroke: "hsl(var(--background))",
                   strokeWidth: 2,
-                  fill: 'hsl(var(--primary))',
-                  className: 'shadow-md'
+                  fill: "hsl(var(--primary))",
+                  className: "shadow-md",
                 }}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -247,7 +301,8 @@ export default function Home() {
         </div>
       </Card>
 
-     <HistoryList />
+      <CreateWork />
+      <HistoryList />
     </motion.div>
   );
 }
