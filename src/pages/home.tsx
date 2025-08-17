@@ -1,12 +1,11 @@
-import { Button } from "@/components/ui/button";
 import { useMemo, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useMathStore, MathProblemType, getAllProblemTypes } from "@/lib/store";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import { ArrowUp, ArrowDown, Award, Brain, Target } from "lucide-react";
+import HistoryList from "@/components/history";
 
 // Format date for display
 const formatDate = (date: Date) => date.toLocaleDateString();
@@ -31,8 +30,6 @@ export default function Home() {
   const [viewMode, setViewMode] = useState<'weekly' | 'monthly'>('weekly');
   const { 
     problems, 
-    addProblem, 
-    removeLastProblem,
     getPointsByType, 
     getTotalPoints 
   } = useMathStore();
@@ -250,47 +247,7 @@ export default function Home() {
         </div>
       </Card>
 
-      {/* Problem Type Buttons */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Add Problems</h3>
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {problemTypes.map((type) => (
-              <motion.div key={`${type.subject}:${type.topic}`} whileTap={{ scale: 0.97 }}>
-                <Button
-                  onClick={() => addProblem(type)}
-                  className="w-full capitalize group relative overflow-hidden"
-                  variant="outline"
-                >
-                  <span className="relative z-10">{type.topic}</span>
-                  <Badge 
-                    variant="secondary" 
-                    className="ml-2 bg-primary/10 text-primary absolute right-2 top-1/2 -translate-y-1/2"
-                  >
-                    {getPointsByType(type)}
-                  </Badge>
-                  <div 
-                    className="absolute inset-0 bg-primary/5 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"
-                    style={{
-                      transform: `scaleX(${calculateProgress(getPointsByType(type), getTotalPoints()) / 100})`,
-                    }}
-                  />
-                </Button>
-              </motion.div>
-            ))}
-            <motion.div whileTap={{ scale: 0.97 }} className="col-span-2 md:col-span-1">
-              <Button
-                onClick={removeLastProblem}
-                variant="outline"
-                className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
-                disabled={problems.length === 0}
-              >
-                Remove Last
-              </Button>
-            </motion.div>
-          </div>
-        </div>
-      </Card>
+     <HistoryList />
     </motion.div>
   );
 }
