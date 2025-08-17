@@ -40,8 +40,15 @@ export default function StreakCard() {
       cursor.setDate(cursor.getDate() - 1);
     }
 
-    // Dynamic goal: next multiple of 10 based on current streak (min 10)
-    const dynamicGoal = Math.max(10, Math.ceil(Math.max(count, 1) / 10) * 10);
+    // Dynamic goal: 7-day segments that advance at exact multiples
+    // 0–6 => 7, at 7 => 14, 8–13 => 14, at 14 => 21, etc. (min 7)
+    const nextStreakSegment = (() => {
+      if (count > 0 && count % 7 === 0) {
+        return count + 7;
+      }
+      return Math.ceil(Math.max(count, 1) / 7) * 7;
+    })();
+    const dynamicGoal = Math.max(7, nextStreakSegment);
     const pct = Math.min(100, Math.round((count / dynamicGoal) * 100));
     return { streak: count, percentage: pct };
   }, [problems]);
