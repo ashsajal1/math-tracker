@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useMemo, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useMathStore, MathProblemType } from "@/lib/store";
+import { useMathStore, MathProblemType, getAllProblemTypes } from "@/lib/store";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -38,7 +38,7 @@ export default function Home() {
   } = useMathStore();
   
   // Get problem types
-  const problemTypes: MathProblemType[] = ['integration', 'differentiation', 'trigonometric', 'mechanics', 'physics', 'ict', 'others'];
+  const problemTypes: MathProblemType[] = getAllProblemTypes();
   
   // Generate chart data based on view mode
   const chartData = useMemo(() => {
@@ -121,9 +121,9 @@ export default function Home() {
           <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-2">Top Category</p>
           <div className="space-y-2 sm:space-y-4">
             {problemTypes.slice(0, 2).map((type) => (
-              <div key={type} className="space-y-1 sm:space-y-2">
+              <div key={`${type.subject}:${type.topic}`} className="space-y-1 sm:space-y-2">
                 <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="capitalize">{type}</span>
+                  <span className="capitalize">{type.topic}</span>
                   <span className="font-medium">{getPointsByType(type)}</span>
                 </div>
                 <Progress value={calculateProgress(getPointsByType(type), getTotalPoints())} className="h-1" />
@@ -256,13 +256,13 @@ export default function Home() {
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {problemTypes.map((type) => (
-              <motion.div key={type} whileTap={{ scale: 0.97 }}>
+              <motion.div key={`${type.subject}:${type.topic}`} whileTap={{ scale: 0.97 }}>
                 <Button
                   onClick={() => addProblem(type)}
                   className="w-full capitalize group relative overflow-hidden"
                   variant="outline"
                 >
-                  <span className="relative z-10">{type}</span>
+                  <span className="relative z-10">{type.topic}</span>
                   <Badge 
                     variant="secondary" 
                     className="ml-2 bg-primary/10 text-primary absolute right-2 top-1/2 -translate-y-1/2"
