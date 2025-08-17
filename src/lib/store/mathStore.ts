@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { v4 as uuidv4 } from 'uuid';
 
 export type MathProblemType = 'integration' | 'differentiation' | 'trigonometric' | 'mechanics' | 'physics' | 'ict' | 'others';
 
@@ -29,7 +30,7 @@ export const useMathStore = create<MathStore>()(
       
       addProblem: (type, points = 5) => {
         const newProblem: MathProblem = {
-          id: Math.random().toString(36).substring(2, 9),
+          id: uuidv4(),
           date: new Date().toISOString(),
           type,
           points,
