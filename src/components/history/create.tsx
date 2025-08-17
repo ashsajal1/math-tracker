@@ -27,19 +27,36 @@ export default function CreateWork() {
     [allTypes, subject]
   );
   const [topic, setTopic] = useState<string>("");
-  const [points, setPoints] = useState<number>(5);
+  // Default points fixed at 5; remove points UI
+  const defaultDate = useMemo(() => {
+    return new Date().toISOString().split("T")[0];
+  }, []);
+  const [date, setDate] = useState<string>(defaultDate);
 
   useEffect(() => {
     // Set default topic when subject changes
-    setTopic((prev) => (topicsForSubject.includes(prev) ? prev : topicsForSubject[0] || ""));
+    setTopic((prev) =>
+      topicsForSubject.includes(prev) ? prev : topicsForSubject[0] || ""
+    );
   }, [subject, topicsForSubject]);
 
-  const canSubmit = subject && topic && points > 0;
+  const canSubmit = Boolean(subject && topic && date);
 
   const handleCreate = () => {
     if (!canSubmit) return;
     const type: MathProblemType = { subject, topic };
-    addProblem(type, points);
+    // Compose ISO with selected date and current time
+    const now = new Date();
+    const [year, month, day] = date.split("-").map(Number);
+    const dt = new Date(
+      year,
+      month - 1,
+      day,
+      now.getHours(),
+      now.getMinutes(),
+      now.getSeconds()
+    );
+    addProblem(type, 5, dt.toISOString());
   };
 
   return (
@@ -78,12 +95,11 @@ export default function CreateWork() {
         </div>
 
         <div className="space-y-2">
-          <Label>Points</Label>
+          <Label>Date</Label>
           <Input
-            type="number"
-            min={1}
-            value={points}
-            onChange={(e) => setPoints(Number(e.target.value || 0))}
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
           />
         </div>
       </div>
