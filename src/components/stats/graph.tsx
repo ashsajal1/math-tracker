@@ -7,12 +7,11 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
+import { motion } from "framer-motion";
 import { useMathStore, getAllProblemTypes } from "@/lib/store";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -98,57 +97,163 @@ export default function PointsGraph() {
     <Card>
       <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <CardTitle>Points Over Time</CardTitle>
-            <div className="flex flex-wrap items-center gap-2">
-                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select subject" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {subjects.map((s) => (
-                            <SelectItem key={s} value={s}>
-                                {s}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <div className="flex items-center space-x-2">
-                    <Button size="sm" variant={filter === 'week' ? 'default' : 'outline'} onClick={() => setFilter("week")}>Week</Button>
-                    <Button size="sm" variant={filter === 'month' ? 'default' : 'outline'} onClick={() => setFilter("month")}>Month</Button>
-                    <Button size="sm" variant={filter === 'all' ? 'default' : 'outline'} onClick={() => setFilter("all")}>All</Button>
-                </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">
+              Points Over Time
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Visualize your progress and consistency.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select subject" />
+                </SelectTrigger>
+                <SelectContent>
+                    {subjects.map((s) => (
+                        <SelectItem key={s} value={s}>
+                            {s}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+            <div className="flex items-center space-x-2 bg-muted/50 p-1 rounded-lg">
+                <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setFilter("week")}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                    filter === "week"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground/80"
+                }`}
+                >
+                Week
+                </motion.button>
+                <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setFilter("month")}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                    filter === "month"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground/80"
+                }`}
+                >
+                Month
+                </motion.button>
+                 <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setFilter("all")}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                    filter === "all"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground/80"
+                }`}
+                >
+                All
+                </motion.button>
             </div>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          {data.length > 0 ? (
-            <LineChart data={data}>
-              <defs>
-                <linearGradient id="colorPoints" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" tickFormatter={(str) => format(new Date(str), 'MMM d')} />
-              <YAxis />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--background))",
-                  borderColor: "hsl(var(--border))",
-                }}
-              />
-              <Legend />
-              <Line type="monotone" dataKey="points" stroke="#8884d8" strokeWidth={2} dot={false} activeDot={{ r: 8 }} />
-              <Area type="monotone" dataKey="points" stroke="none" fillOpacity={1} fill="url(#colorPoints)" />
-            </LineChart>
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-muted-foreground">No data to display for the selected period.</p>
-            </div>
-          )}
-        </ResponsiveContainer>
+        <div className="h-[400px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            {data.length > 0 ? (
+                <LineChart
+                data={data}
+                margin={{ top: 10, right: 10, left: -15, bottom: 5 }}
+                >
+                <defs>
+                    <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                        offset="0%"
+                        stopColor="hsl(var(--primary))"
+                        stopOpacity={0.3}
+                    />
+                    <stop
+                        offset="100%"
+                        stopColor="hsl(var(--primary))"
+                        stopOpacity={0}
+                    />
+                    </linearGradient>
+                </defs>
+                <CartesianGrid
+                    vertical={false}
+                    strokeDasharray="3 3"
+                    className="stroke-muted"
+                />
+                <XAxis
+                    dataKey="date"
+                    tick={{
+                    fontSize: 12,
+                    fill: "hsl(var(--muted-foreground))",
+                    }}
+                    tickLine={false}
+                    axisLine={false}
+                    padding={{ left: 10, right: 10 }}
+                    className="text-xs"
+                    tickFormatter={(str) => format(new Date(str), 'MMM d')}
+                />
+                <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{
+                    fontSize: 12,
+                    fill: "hsl(var(--muted-foreground))",
+                    }}
+                    tickFormatter={(value) => `${value}`}
+                    width={30}
+                />
+                <Tooltip
+                    content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                        return (
+                        <div className="bg-background border rounded-lg p-3 shadow-lg">
+                            <p className="font-medium text-foreground">{format(new Date(label), 'eeee, MMM d')}</p>
+                            <p className="text-sm text-muted-foreground">
+                            Points:{" "}
+                            <span className="text-foreground font-medium">
+                                {payload[0].value}
+                            </span>
+                            </p>
+                        </div>
+                        );
+                    }
+                    return null;
+                    }}
+                />
+                <Line
+                    type="monotone"
+                    dataKey="points"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={2}
+                    dot={{
+                    r: 4,
+                    stroke: "hsl(var(--background))",
+                    strokeWidth: 2,
+                    fill: "hsl(var(--primary))",
+                    className: "shadow-sm",
+                    }}
+                    activeDot={{
+                    r: 6,
+                    stroke: "hsl(var(--background))",
+                    strokeWidth: 2,
+                    fill: "hsl(var(--primary))",
+                    className: "shadow-md",
+                    }}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+                 <Area type="monotone" dataKey="points" fillOpacity={1} fill="url(#lineGradient)" />
+                </LineChart>
+            ) : (
+                <div className="flex items-center justify-center h-full">
+                <p className="text-muted-foreground">No data to display for the selected period.</p>
+                </div>
+            )}
+          </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );
