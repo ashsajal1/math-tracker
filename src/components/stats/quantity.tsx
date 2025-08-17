@@ -21,17 +21,15 @@ export default function QuantityCard({ problemsGoal = 10, pointsGoal = 50 }: Qua
     return { countToday: count, pointsToday: pts };
   }, [problems, today]);
 
-  // Dynamic goals: next multiple of 10 (min 10), also respect provided goals as minimums
+  // Dynamic goals:
+  // - Problems: next multiple of 10 (min 10), using provided problemsGoal as a minimum
+  // - Points: align with problems goal at 5 points per problem, using provided pointsGoal as a minimum
   const dynamicProblemsGoal = Math.max(
     problemsGoal,
     10,
     Math.ceil(Math.max(countToday, 1) / 10) * 10
   );
-  const dynamicPointsGoal = Math.max(
-    pointsGoal,
-    10,
-    Math.ceil(Math.max(pointsToday, 1) / 10) * 10
-  );
+  const dynamicPointsGoal = Math.max(pointsGoal, dynamicProblemsGoal * 5);
 
   const problemsProgress = Math.min(100, Math.round((countToday / dynamicProblemsGoal) * 100));
   const pointsProgress = Math.min(100, Math.round((pointsToday / dynamicPointsGoal) * 100));
