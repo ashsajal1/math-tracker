@@ -14,22 +14,28 @@ const startOfDay = (d: Date) => {
   return x;
 };
 
-const toISODate = (d: Date) => d.toISOString().split("T")[0];
+// Local YYYY-MM-DD string (not UTC) so streaks align with user's local day
+const toLocalDateKey = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 
 export default function StreakCard({ goalDays = 30 }: StreakCardProps) {
   const { problems } = useMathStore();
 
   const { streak, percentage } = useMemo(() => {
-    // Build a set of unique activity dates (YYYY-MM-DD)
+    // Build a set of unique local-date keys (YYYY-MM-DD) from problems
     const days = new Set<string>(
-      problems.map((p) => p.date.split("T")[0])
+      problems.map((p) => toLocalDateKey(new Date(p.date)))
     );
 
-    // Count consecutive days ending today
+    // Count consecutive days ending today (local)
     let count = 0;
     const cursor = startOfDay(new Date());
 
-    while (days.has(toISODate(cursor))) {
+    while (days.has(toLocalDateKey(cursor))) {
       count += 1;
       cursor.setDate(cursor.getDate() - 1);
     }
