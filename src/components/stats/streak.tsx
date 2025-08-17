@@ -5,10 +5,6 @@ import { Target } from "lucide-react";
 import { useMathStore } from "@/lib/store";
 import NewStreakCongrats from "@/components/new-streak-congrats";
 
-type StreakCardProps = {
-  goalDays?: number; // for progress bar, default 30
-};
-
 const startOfDay = (d: Date) => {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
@@ -23,7 +19,7 @@ const toLocalDateKey = (d: Date) => {
   return `${y}-${m}-${day}`;
 };
 
-export default function StreakCard({ goalDays = 30 }: StreakCardProps) {
+export default function StreakCard() {
   const { problems } = useMathStore();
   const [showCongrats, setShowCongrats] = useState(false);
   const timerRef = useRef<number | null>(null);
@@ -44,9 +40,11 @@ export default function StreakCard({ goalDays = 30 }: StreakCardProps) {
       cursor.setDate(cursor.getDate() - 1);
     }
 
-    const pct = Math.min(100, Math.round((count / goalDays) * 100));
+    // Dynamic goal: next multiple of 10 based on current streak (min 10)
+    const dynamicGoal = Math.max(10, Math.ceil(Math.max(count, 1) / 10) * 10);
+    const pct = Math.min(100, Math.round((count / dynamicGoal) * 100));
     return { streak: count, percentage: pct };
-  }, [problems, goalDays]);
+  }, [problems]);
 
   // When streak increases by exactly 1, show congrats after 3s
   useEffect(() => {
