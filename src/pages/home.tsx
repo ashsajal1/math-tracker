@@ -8,11 +8,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useMathStore, MathProblemType, getAllProblemTypes } from "@/lib/store";
+import { useMathStore } from "@/lib/store";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { ArrowUp, ArrowDown, Award, Brain, Target } from "lucide-react";
 import HistoryList from "@/components/history";
 import CreateWork from "@/components/history/create";
 import StatsSection from "@/components/stats";
@@ -32,17 +30,11 @@ const getLastNDaysData = (days: number) => {
   });
 };
 
-// Calculate progress percentage
-const calculateProgress = (current: number, target = 100) => {
-  return Math.min((current / target) * 100, 100);
-};
+//
 
 export default function Home() {
   const [viewMode, setViewMode] = useState<"weekly" | "monthly">("weekly");
-  const { problems, getPointsByType, getTotalPoints } = useMathStore();
-
-  // Get problem types
-  const problemTypes: MathProblemType[] = getAllProblemTypes();
+  const { problems } = useMathStore();
 
   // Generate chart data based on view mode
   const chartData = useMemo(() => {
@@ -64,13 +56,7 @@ export default function Home() {
     });
   }, [problems, viewMode]);
 
-  // Calculate trend
-  const trend = useMemo(() => {
-    if (chartData.length < 2) return 0;
-    const latest = chartData[chartData.length - 1].quantity;
-    const previous = chartData[chartData.length - 2].quantity;
-    return ((latest - previous) / (previous || 1)) * 100;
-  }, [chartData]);
+  //
 
   return (
     <motion.div
