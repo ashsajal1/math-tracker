@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { CiMenuFries } from "react-icons/ci";
 import { motion } from "framer-motion";
 import { ModeToggle } from "../mode-toggle";
+import Logo from "@/components/Logo";
 
 export default function Navbar() {
   const [scrollY, setScrollY] = useState(0);
@@ -46,9 +47,13 @@ export default function Navbar() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              Math Tracker
-            </h1>
+            <div className="flex items-center gap-2">
+              <Logo className="h-8 w-auto text-black dark:text-white" />
+              <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                Math Tracker
+              </h1>
+            </div>
+            
           </motion.div>
         </Link>
       </div>
