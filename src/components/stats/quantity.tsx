@@ -5,8 +5,8 @@ import { Brain, Award } from "lucide-react";
 import { useMathStore } from "@/lib/store";
 
 type QuantityCardProps = {
-  problemsGoal?: number; // target number of problems per day
-  pointsGoal?: number;   // target points per day
+  problemsGoal?: number; // kept for API compatibility, but dynamic goal is used
+  pointsGoal?: number;   // kept for API compatibility, but dynamic goal is used
 };
 
 export default function QuantityCard({ problemsGoal = 10, pointsGoal = 50 }: QuantityCardProps) {
@@ -21,8 +21,20 @@ export default function QuantityCard({ problemsGoal = 10, pointsGoal = 50 }: Qua
     return { countToday: count, pointsToday: pts };
   }, [problems, today]);
 
-  const problemsProgress = Math.min(100, Math.round((countToday / Math.max(1, problemsGoal)) * 100));
-  const pointsProgress = Math.min(100, Math.round((pointsToday / Math.max(1, pointsGoal)) * 100));
+  // Dynamic goals: next multiple of 10 (min 10), also respect provided goals as minimums
+  const dynamicProblemsGoal = Math.max(
+    problemsGoal,
+    10,
+    Math.ceil(Math.max(countToday, 1) / 10) * 10
+  );
+  const dynamicPointsGoal = Math.max(
+    pointsGoal,
+    10,
+    Math.ceil(Math.max(pointsToday, 1) / 10) * 10
+  );
+
+  const problemsProgress = Math.min(100, Math.round((countToday / dynamicProblemsGoal) * 100));
+  const pointsProgress = Math.min(100, Math.round((pointsToday / dynamicPointsGoal) * 100));
 
   return (
     <Card className="p-3 sm:p-6 space-y-4">
@@ -34,7 +46,7 @@ export default function QuantityCard({ problemsGoal = 10, pointsGoal = 50 }: Qua
         </div>
         <div className="flex items-baseline justify-between">
           <h3 className="text-lg sm:text-2xl font-bold">{countToday}</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground">Goal: {problemsGoal}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">Goal: {dynamicProblemsGoal}</p>
         </div>
         <Progress value={problemsProgress} className="h-1" />
       </div>
@@ -47,7 +59,7 @@ export default function QuantityCard({ problemsGoal = 10, pointsGoal = 50 }: Qua
         </div>
         <div className="flex items-baseline justify-between">
           <h3 className="text-lg sm:text-2xl font-bold">{pointsToday}</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground">Goal: {pointsGoal}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">Goal: {dynamicPointsGoal}</p>
         </div>
         <Progress value={pointsProgress} className="h-1" />
       </div>
