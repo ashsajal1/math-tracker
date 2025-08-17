@@ -39,7 +39,7 @@ export default function QuantityCard({ problemsGoal = 10, pointsGoal = 50 }: Qua
       {/* Problems Today */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <p className="text-xs sm:text-sm font-medium text-muted-foreground">Problems Today</p>
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground">Problems Solved Today</p>
           <Brain className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
         </div>
         <div className="flex items-baseline justify-between">
