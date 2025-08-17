@@ -1,0 +1,155 @@
+import { useMemo, useState } from "react";
+import {
+  Area,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { useMathStore, getAllProblemTypes } from "@/lib/store";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
+
+type FilterType = "week" | "month" | "all";
+
+export default function PointsGraph() {
+  const { problems } = useMathStore();
+  const [filter, setFilter] = useState<FilterType>("week");
+  const allTypes = getAllProblemTypes();
+  const subjects = useMemo(() => {
+    const set = new Set(allTypes.map((t) => t.subject));
+    return ["All", ...Array.from(set)];
+  }, [allTypes]);
+  const [selectedSubject, setSelectedSubject] = useState<string>("All");
+
+  const filteredProblems = useMemo(() => {
+    let subjectFiltered = problems;
+    if (selectedSubject !== "All") {
+      subjectFiltered = problems.filter(p => p.type.subject === selectedSubject);
+    }
+
+    const now = new Date();
+    if (filter === "week") {
+      const start = startOfWeek(now);
+      const end = endOfWeek(now);
+      return subjectFiltered.filter(p => {
+        const d = new Date(p.date);
+        return d >= start && d <= end;
+      });
+    }
+    if (filter === "month") {
+      const start = startOfMonth(now);
+      const end = endOfMonth(now);
+      return subjectFiltered.filter(p => {
+        const d = new Date(p.date);
+        return d >= start && d <= end;
+      });
+    }
+    return subjectFiltered;
+  }, [problems, filter, selectedSubject]);
+
+  const data = useMemo(() => {
+    const grouped = filteredProblems.reduce((acc, problem) => {
+      const date = format(new Date(problem.date), "yyyy-MM-dd");
+      if (!acc[date]) {
+        acc[date] = 0;
+      }
+      acc[date] += problem.points;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const now = new Date();
+    let interval;
+    if (filter === 'week') {
+        interval = { start: startOfWeek(now), end: endOfWeek(now) };
+    } else if (filter === 'month') {
+        interval = { start: startOfMonth(now), end: endOfMonth(now) };
+    }
+
+    if (interval) {
+        const allDays = eachDayOfInterval(interval);
+        return allDays.map(day => {
+            const dateStr = format(day, "yyyy-MM-dd");
+            return {
+                date: dateStr,
+                points: grouped[dateStr] || 0,
+            };
+        });
+    }
+
+    return Object.entries(grouped)
+      .map(([date, points]) => ({ date, points }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [filteredProblems, filter]);
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <CardTitle>Points Over Time</CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {subjects.map((s) => (
+                            <SelectItem key={s} value={s}>
+                                {s}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                <div className="flex items-center space-x-2">
+                    <Button size="sm" variant={filter === 'week' ? 'default' : 'outline'} onClick={() => setFilter("week")}>Week</Button>
+                    <Button size="sm" variant={filter === 'month' ? 'default' : 'outline'} onClick={() => setFilter("month")}>Month</Button>
+                    <Button size="sm" variant={filter === 'all' ? 'default' : 'outline'} onClick={() => setFilter("all")}>All</Button>
+                </div>
+            </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={300}>
+          {data.length > 0 ? (
+            <LineChart data={data}>
+              <defs>
+                <linearGradient id="colorPoints" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" tickFormatter={(str) => format(new Date(str), 'MMM d')} />
+              <YAxis />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "hsl(var(--background))",
+                  borderColor: "hsl(var(--border))",
+                }}
+              />
+              <Legend />
+              <Line type="monotone" dataKey="points" stroke="#8884d8" strokeWidth={2} dot={false} activeDot={{ r: 8 }} />
+              <Area type="monotone" dataKey="points" stroke="none" fillOpacity={1} fill="url(#colorPoints)" />
+            </LineChart>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-muted-foreground">No data to display for the selected period.</p>
+            </div>
+          )}
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
+}
