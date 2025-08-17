@@ -16,7 +16,7 @@ export interface MathProblem {
 
 interface MathStore {
   problems: MathProblem[];
-  addProblem: (type: MathProblemType, points?: number) => void;
+  addProblem: (type: MathProblemType, points?: number, dateISO?: string) => void;
   removeProblem: (id: string) => void;
   removeLastProblem: () => void;
   updateProblem: (id: string, updates: Partial<MathProblem>) => void;
@@ -31,10 +31,10 @@ export const useMathStore = create<MathStore>()(
     (set, get) => ({
       problems: [],
 
-      addProblem: (type, points = 5) => {
+      addProblem: (type, points = 5, dateISO?: string) => {
         const newProblem: MathProblem = {
           id: uuidv4(),
-          date: new Date().toISOString(),
+          date: dateISO ?? new Date().toISOString(),
           type,
           points,
         };
