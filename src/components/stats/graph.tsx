@@ -19,7 +19,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+} from "date-fns";
 
 type FilterType = "week" | "month" | "all";
 
@@ -36,14 +43,16 @@ export default function PointsGraph() {
   const filteredProblems = useMemo(() => {
     let subjectFiltered = problems;
     if (selectedSubject !== "All") {
-      subjectFiltered = problems.filter(p => p.type.subject === selectedSubject);
+      subjectFiltered = problems.filter(
+        (p) => p.type.subject === selectedSubject
+      );
     }
 
     const now = new Date();
     if (filter === "week") {
       const start = startOfWeek(now);
       const end = endOfWeek(now);
-      return subjectFiltered.filter(p => {
+      return subjectFiltered.filter((p) => {
         const d = new Date(p.date);
         return d >= start && d <= end;
       });
@@ -51,7 +60,7 @@ export default function PointsGraph() {
     if (filter === "month") {
       const start = startOfMonth(now);
       const end = endOfMonth(now);
-      return subjectFiltered.filter(p => {
+      return subjectFiltered.filter((p) => {
         const d = new Date(p.date);
         return d >= start && d <= end;
       });
@@ -71,21 +80,21 @@ export default function PointsGraph() {
 
     const now = new Date();
     let interval;
-    if (filter === 'week') {
-        interval = { start: startOfWeek(now), end: endOfWeek(now) };
-    } else if (filter === 'month') {
-        interval = { start: startOfMonth(now), end: endOfMonth(now) };
+    if (filter === "week") {
+      interval = { start: startOfWeek(now), end: endOfWeek(now) };
+    } else if (filter === "month") {
+      interval = { start: startOfMonth(now), end: endOfMonth(now) };
     }
 
     if (interval) {
-        const allDays = eachDayOfInterval(interval);
-        return allDays.map(day => {
-            const dateStr = format(day, "yyyy-MM-dd");
-            return {
-                date: dateStr,
-                points: grouped[dateStr] || 0,
-            };
-        });
+      const allDays = eachDayOfInterval(interval);
+      return allDays.map((day) => {
+        const dateStr = format(day, "yyyy-MM-dd");
+        return {
+          date: dateStr,
+          points: grouped[dateStr] || 0,
+        };
+      });
     }
 
     return Object.entries(grouped)
@@ -107,51 +116,51 @@ export default function PointsGraph() {
           </div>
           <div className="flex items-center gap-2">
             <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select subject" />
-                </SelectTrigger>
-                <SelectContent>
-                    {subjects.map((s) => (
-                        <SelectItem key={s} value={s}>
-                            {s}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select subject" />
+              </SelectTrigger>
+              <SelectContent>
+                {subjects.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
             <div className="flex items-center space-x-2 bg-muted/50 p-1 rounded-lg">
-                <motion.button
+              <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setFilter("week")}
                 className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                    filter === "week"
+                  filter === "week"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground/80"
                 }`}
-                >
+              >
                 Week
-                </motion.button>
-                <motion.button
+              </motion.button>
+              <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setFilter("month")}
                 className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                    filter === "month"
+                  filter === "month"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground/80"
                 }`}
-                >
+              >
                 Month
-                </motion.button>
-                 <motion.button
+              </motion.button>
+              <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setFilter("all")}
                 className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                    filter === "all"
+                  filter === "all"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground/80"
                 }`}
-                >
+              >
                 All
-                </motion.button>
+              </motion.button>
             </div>
           </div>
         </div>
@@ -160,97 +169,106 @@ export default function PointsGraph() {
         <div className="h-[150px] sm:h-[350px] md:h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             {data.length > 0 ? (
-                <LineChart
+              <LineChart
                 data={data}
                 margin={{ top: 10, right: 10, left: -15, bottom: 5 }}
-                >
+              >
                 <defs>
-                    <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop
-                        offset="0%"
-                        stopColor="hsl(var(--primary))"
-                        stopOpacity={0.3}
+                      offset="0%"
+                      stopColor="hsl(var(--primary))"
+                      stopOpacity={0.3}
                     />
                     <stop
-                        offset="100%"
-                        stopColor="hsl(var(--primary))"
-                        stopOpacity={0}
+                      offset="100%"
+                      stopColor="hsl(var(--primary))"
+                      stopOpacity={0}
                     />
-                    </linearGradient>
+                  </linearGradient>
                 </defs>
                 <CartesianGrid
-                    vertical={false}
-                    strokeDasharray="3 3"
-                    className="stroke-muted"
+                  vertical={false}
+                  strokeDasharray="3 3"
+                  className="stroke-muted"
                 />
                 <XAxis
-                    dataKey="date"
-                    tick={{
+                  dataKey="date"
+                  tick={{
                     fontSize: 12,
                     fill: "hsl(var(--muted-foreground))",
-                    }}
-                    tickLine={false}
-                    axisLine={false}
-                    padding={{ left: 10, right: 10 }}
-                    className="text-xs"
-                    tickFormatter={(str) => format(new Date(str), 'MMM d')}
+                  }}
+                  tickLine={false}
+                  axisLine={false}
+                  padding={{ left: 10, right: 10 }}
+                  className="text-xs"
+                  tickFormatter={(str) => format(new Date(str), "MMM d")}
                 />
                 <YAxis
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{
                     fontSize: 12,
                     fill: "hsl(var(--muted-foreground))",
-                    }}
-                    tickFormatter={(value) => `${value}`}
-                    width={30}
+                  }}
+                  tickFormatter={(value) => `${value}`}
+                  width={30}
                 />
                 <Tooltip
-                    content={({ active, payload, label }) => {
+                  content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
-                        return (
+                      return (
                         <div className="bg-background border rounded-lg p-3 shadow-lg">
-                            <p className="font-medium text-foreground">{format(new Date(label), 'eeee, MMM d')}</p>
-                            <p className="text-sm text-muted-foreground">
+                          <p className="font-medium text-foreground">
+                            {format(new Date(label), "eeee, MMM d")}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
                             Points:{" "}
                             <span className="text-foreground font-medium">
-                                {payload[0].value}
+                              {payload[0].value}
                             </span>
-                            </p>
+                          </p>
                         </div>
-                        );
+                      );
                     }
                     return null;
-                    }}
+                  }}
                 />
                 <Line
-                    type="monotone"
-                    dataKey="points"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
-                    dot={{
+                  type="monotone"
+                  dataKey="points"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot={{
                     r: 4,
                     stroke: "hsl(var(--background))",
                     strokeWidth: 2,
                     fill: "hsl(var(--primary))",
                     className: "shadow-sm",
-                    }}
-                    activeDot={{
+                  }}
+                  activeDot={{
                     r: 6,
                     stroke: "hsl(var(--background))",
                     strokeWidth: 2,
                     fill: "hsl(var(--primary))",
                     className: "shadow-md",
-                    }}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                  }}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
-                 <Area type="monotone" dataKey="points" fillOpacity={1} fill="url(#lineGradient)" />
-                </LineChart>
+                <Area
+                  type="monotone"
+                  dataKey="points"
+                  fillOpacity={1}
+                  fill="url(#lineGradient)"
+                />
+              </LineChart>
             ) : (
-                <div className="flex items-center justify-center h-full">
-                <p className="text-muted-foreground">No data to display for the selected period.</p>
-                </div>
+              <div className="flex items-center justify-center h-full">
+                <p className="text-muted-foreground">
+                  No data to display for the selected period.
+                </p>
+              </div>
             )}
           </ResponsiveContainer>
         </div>
