@@ -16,18 +16,21 @@ export default function Home() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="p-6 space-y-8 max-w-7xl mx-auto"
+        className="p-2 sm:p-6 sm:space-y-4 max-w-7xl mx-auto"
       >
         {/* Stats Cards */}
         <div className="hidden sm:block">
           <StatsSection />
         </div>
-        <PointsGraph />
-        <CreateWork />
-        <div className="sm:hidden">
-          <StatsSection />
+        <div className="flex flex-col gap-2">
+          <PointsGraph />
+          <CreateWork />
+
+          <div className="sm:hidden">
+            <StatsSection />
+          </div>
+          <HistoryList />
         </div>
-        <HistoryList />
       </motion.div>
     </>
   );
