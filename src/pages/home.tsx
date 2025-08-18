@@ -3,6 +3,7 @@ import HistoryList from "@/components/history";
 import CreateWork from "@/components/history/create";
 import StatsSection from "@/components/stats";
 import Seo from "@/components/Seo";
+import PointsGraph from "@/components/stats/graph";
 
 export default function Home() {
   return (
@@ -18,9 +19,14 @@ export default function Home() {
         className="p-6 space-y-8 max-w-7xl mx-auto"
       >
         {/* Stats Cards */}
-        <StatsSection />
-
+        <div className="hidden sm:block">
+          <StatsSection />
+        </div>
+        <PointsGraph />
         <CreateWork />
+        <div className="sm:hidden">
+          <StatsSection />
+        </div>
         <HistoryList />
       </motion.div>
     </>

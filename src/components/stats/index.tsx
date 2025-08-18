@@ -1,7 +1,6 @@
 import QuantityCard from "@/components/stats/quantity";
 import StreakCard from "@/components/stats/streak";
 import TopCategoryCard from "@/components/stats/top-category";
-import PointsGraph from "@/components/stats/graph";
 
 export default function StatsSection() {
   return (
@@ -11,7 +10,6 @@ export default function StatsSection() {
         <StreakCard />
         <TopCategoryCard />
       </div>
-      <PointsGraph />
     </div>
   );
 }
