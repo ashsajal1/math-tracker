@@ -166,7 +166,7 @@ export default function PointsGraph() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-[150px] sm:h-[350px] md:h-[400px] w-full">
+        <div className="h-[150px] sm:h-[250px] md:h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             {data.length > 0 ? (
               <LineChart
