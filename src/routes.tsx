@@ -3,6 +3,7 @@ import Home from './pages/home';
 import RootLayout from './pages/Layout';
 import NotFound from './pages/not-found';
 import ErrorPage from './pages/error';
+import Stats from './pages/stats';
 
 export const router = createBrowserRouter([
     {
@@ -13,6 +14,10 @@ export const router = createBrowserRouter([
             {
                 path:'/',
                 element: <Home />
+            },
+            {
+                path:'/stats',
+                element: <Stats />
             },
             {
                 path:'*',
