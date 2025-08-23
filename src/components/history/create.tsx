@@ -4,13 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useMathStore } from "@/lib/store";
+import { useCostStore } from "@/lib/store";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+type ReasonType = "Household" | "Transport" | "Food" | "Entertainment" | "Education" | "Health" | "Other";
 
 export default function CreateWork() {
-  const { addProblem } = useMathStore();
+  const { addCost } = useCostStore();
   
   const [cost, setCost] = useState<number>(0);
-  const [reason, setReason] = useState<string>("");
+  const [reason, setReason] = useState<ReasonType>("Household");
   const [note, setNote] = useState<string>("");
   
   // Default date to today
@@ -25,33 +28,20 @@ export default function CreateWork() {
   const handleCreate = () => {
     if (!canSubmit) return;
     
-    // Use current time for the timestamp
-    const now = new Date();
-    const [year, month, day] = date.split("-").map(Number);
-    
-    const dt = new Date(
-      year,
-      month - 1,
-      day,
-      now.getHours(),
-      now.getMinutes(),
-      now.getSeconds()
-    );
-    
-    // Create a custom data object to store the additional fields
-    const customData = {
+    // Create the cost data object
+    const costData = {
       cost,
       reason,
       note: note || undefined, // Only include note if it's not empty
+      fund: undefined // Optional fund field
     };
     
-    // Add the problem with the custom data
-    // Using empty strings for subject and topic to maintain compatibility
-    addProblem({ subject: "", topic: "" }, 0, dt.toISOString(), customData);
+    // Add the cost data
+    addCost(costData);
     
     // Reset form
     setCost(0);
-    setReason("");
+    setReason("Household");
     setNote("");
     setDate(defaultDate);
   };
@@ -82,13 +72,21 @@ export default function CreateWork() {
         </div>
 
         <div className="space-y-2">
-          <Label>Reason for Cost</Label>
-          <Input
-            type="text"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="Why was there a cost?"
-          />
+          <Label>Reason</Label>
+          <Select value={reason} onValueChange={(value: ReasonType) => setReason(value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a reason" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Household">Household</SelectItem>
+              <SelectItem value="Transport">Transport</SelectItem>
+              <SelectItem value="Food">Food</SelectItem>
+              <SelectItem value="Entertainment">Entertainment</SelectItem>
+              <SelectItem value="Education">Education</SelectItem>
+              <SelectItem value="Health">Health</SelectItem>
+              <SelectItem value="Other">Other</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="md:col-span-2 space-y-2">

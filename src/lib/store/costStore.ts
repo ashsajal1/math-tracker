@@ -14,7 +14,7 @@ export interface CostData {
 
 interface CostStore {
   costData: CostData[];
-  addCost: (costData: CostData) => void;
+  addCost: (costData: Omit<CostData, 'id' | 'date'>) => void;
   removeCost: (id: string) => void;
   removeLastCost: () => void;
   updateCost: (id: string, updates: Partial<CostData>) => void;
