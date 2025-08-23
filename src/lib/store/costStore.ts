@@ -1,109 +1,177 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { v4 as uuidv4 } from "uuid";
+import useFundStore from "./fundStore";
 
 type ReasonType = "Household" | "Transport" | "Food" | "Entertainment" | "Education" | "Health" | "Other";
+
 export interface CostData {
   id: string;
   date: string;
   cost: number;
   reason: ReasonType;
   note?: string;
-  fund?: string;
+  fundId?: string;
 }
 
-interface CostStore {
+// Define the store state and actions
+type CostStore = {
   costData: CostData[];
   addCost: (costData: Omit<CostData, 'id' | 'date'>) => void;
   removeCost: (id: string) => void;
   removeLastCost: () => void;
-  updateCost: (id: string, updates: Partial<CostData>) => void;
-  getCostsByType: (type: CostData) => CostData[];
+  updateCost: (id: string, updates: Partial<Omit<CostData, 'id'>>) => void;
+  getCostsByType: (type: ReasonType) => CostData[];
   getTotalCost: () => number;
-  getCostByType: (reason: string) => number;
+  getCostByType: (reason: ReasonType) => number;
   clearAll: () => void;
-}
+};
 
+// Create the store with persistence
 export const useCostStore = create<CostStore>()(
   persist(
     (set, get) => ({
       costData: [],
-
-      addCost: (costData: Omit<CostData, 'id' | 'date'>) => {
-        const newCostData: CostData = {
+      
+      addCost: (costData) => {
+        // Check if we have sufficient funds if fundId is provided
+        if (costData.fundId) {
+          const fundBalance = useFundStore.getState().getFundBalance(costData.fundId);
+          if (fundBalance < costData.cost) {
+            alert('Insufficient funds in the selected account');
+            return;
+          }
+          
+          // Deduct from fund
+          useFundStore.getState().withdraw(
+            costData.cost,
+            `Expense: ${costData.reason}`,
+            costData.fundId
+          );
+        }
+        
+        const newCost: CostData = {
+          ...costData,
           id: uuidv4(),
           date: new Date().toISOString(),
-          ...costData,
         };
+        
         set((state) => ({
-          costData: [...state.costData, newCostData],
+          costData: [...state.costData, newCost],
         }));
       },
-
+      
       removeCost: (id) => {
+        const costToRemove = get().costData.find(cost => cost.id === id);
+        
+        // Refund to fund if applicable
+        if (costToRemove?.fundId) {
+          useFundStore.getState().deposit(
+            costToRemove.cost,
+            `Refund: ${costToRemove.reason}`,
+            costToRemove.fundId
+          );
+        }
+        
         set((state) => ({
-          costData: state.costData.filter((p) => p.id !== id),
+          costData: state.costData.filter((cost) => cost.id !== id),
         }));
       },
-
+      
       removeLastCost: () => {
+        const lastCost = get().costData[get().costData.length - 1];
+        
+        // Refund to fund if applicable
+        if (lastCost?.fundId) {
+          useFundStore.getState().deposit(
+            lastCost.cost,
+            `Refund: ${lastCost.reason}`,
+            lastCost.fundId
+          );
+        }
+        
+        set((state) => ({
+          costData: state.costData.length > 0 ? state.costData.slice(0, -1) : [],
+        }));
+      },
+      
+      updateCost: (id, updates) => {
+        const oldCost = get().costData.find(cost => cost.id === id);
+        
         set((state) => {
-          if (state.costData.length === 0) return state;
-          const costData = [...state.costData];
-          costData.pop();
-          return { costData };
+          const costIndex = state.costData.findIndex((cost) => cost.id === id);
+          if (costIndex === -1) return state;
+          
+          const newCostData = [...state.costData];
+          const updatedCost = {
+            ...newCostData[costIndex],
+            ...updates,
+          };
+          
+          // Handle fund updates if cost or fundId changed
+          if (oldCost && (oldCost.cost !== updatedCost.cost || oldCost.fundId !== updatedCost.fundId)) {
+            // Refund old amount if it had a fund
+            if (oldCost.fundId) {
+              useFundStore.getState().deposit(
+                oldCost.cost,
+                `Refund: ${oldCost.reason}`,
+                oldCost.fundId
+              );
+            }
+            
+            // Deduct new amount if fund is specified
+            if (updatedCost.fundId) {
+              useFundStore.getState().withdraw(
+                updatedCost.cost,
+                `Expense: ${updatedCost.reason}`,
+                updatedCost.fundId
+              );
+            }
+          }
+          
+          newCostData[costIndex] = updatedCost;
+          return { costData: newCostData };
         });
       },
-
-      updateCost: (id, updates) => {
-        set((state) => ({
-          costData: state.costData.map((p) =>
-            p.id === id ? { ...p, ...updates } : p
-          ),
-        }));
+      
+      getCostsByType: (type: ReasonType): CostData[] => {
+        return get().costData.filter((cost: CostData) => cost.reason === type);
       },
-
-      getCostsByType: (type) => {
-        return get().costData.filter(
-          (costData) =>
-            costData.cost === type.cost &&
-            costData.reason === type.reason
-        );
+      
+      getTotalCost: (): number => {
+        return get().costData.reduce((sum: number, cost: CostData) => sum + cost.cost, 0);
       },
-
-      getTotalCost: () => {
-        return get().costData.reduce((sum, costData) => sum + costData.cost, 0);
-      },
-
-      getCostByType: (reason) => {
+      
+      getCostByType: (reason: ReasonType): number => {
         return get()
-          .costData.filter((costData) => costData.reason === reason)
-          .reduce((sum, costData) => sum + costData.cost, 0);
+          .costData
+          .filter((cost: CostData) => cost.reason === reason)
+          .reduce((sum: number, cost: CostData) => sum + cost.cost, 0);
       },
-
-      clearAll: () => {
+      
+      clearAll: (): void => {
+        // Note: This will not refund any funds as we're clearing everything
         set({ costData: [] });
       },
     }),
     {
-      name: "math-tracker-storage", // unique name for localStorage key
-      storage: createJSONStorage(() => localStorage), // use localStorage
+      name: "cost-tracker-storage",
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );
 
 // Utility function to get all problem types
-export const getAllProblemTypes = (): string[] => ["Household", "Transport", "Food", "Entertainment", "Education", "Health", "Other"];
+export const getAllProblemTypes = (): string[] => {
+  const { costData } = useCostStore.getState();
+  return Array.from(new Set(costData.map(cost => cost.reason)));
+};
 
-// Utility function to get points for all types
-// Returns an object keyed by "<subject>:<topic>" with total points per type
+// Utility function to get costs by category
 export const getCostForAllTypes = (): Record<string, number> => {
-  const store = useCostStore.getState();
-  const types = getAllProblemTypes();
-  const totals: Record<string, number> = {};
-  for (const t of types) {
-    const key = `${t}`;
-    totals[key] = store.getCostByType(t);
-  }
-  return totals;
+  const costs = useCostStore.getState().costData;
+  return costs.reduce((acc: Record<string, number>, cost: CostData) => {
+    acc[cost.reason] = (acc[cost.reason] || 0) + cost.cost;
+    return acc;
+  }, {});
 };
