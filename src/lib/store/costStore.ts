@@ -2,120 +2,87 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { v4 as uuidv4 } from "uuid";
 
-export type MathProblemType = {
-  subject: string;
-  topic: string;
-};
-
+type ReasonType = "Household" | "Transport" | "Food" | "Entertainment" | "Education" | "Health" | "Other";
 export interface CostData {
-  cost: number;
-  reason: string;
-  note?: string;
-}
-
-export interface MathProblem {
   id: string;
-  date: string; // ISO date string
-  type: MathProblemType;
-  points: number;
-  costData?: CostData;
+  date: string;
+  cost: number;
+  reason: ReasonType;
+  note?: string;
+  fund?: string;
 }
 
-interface MathStore {
-  problems: MathProblem[];
-  addProblem: (type: MathProblemType, points?: number, dateISO?: string, costData?: CostData) => void;
-  removeProblem: (id: string) => void;
-  removeLastProblem: () => void;
-  updateProblem: (id: string, updates: Partial<MathProblem>) => void;
-  getProblemsByType: (type: MathProblemType) => MathProblem[];
-  getTotalPoints: () => number;
-  getPointsByType: (type: MathProblemType) => number;
+interface CostStore {
+  costData: CostData[];
+  addCost: (costData: CostData) => void;
+  removeCost: (id: string) => void;
+  removeLastCost: () => void;
+  updateCost: (id: string, updates: Partial<CostData>) => void;
+  getCostsByType: (type: CostData) => CostData[];
   getTotalCost: () => number;
-  getCostByType: (type: MathProblemType) => number;
+  getCostByType: (reason: string) => number;
   clearAll: () => void;
 }
 
-export const useMathStore = create<MathStore>()(
+export const useCostStore = create<CostStore>()(
   persist(
     (set, get) => ({
-      problems: [],
+      costData: [],
 
-      addProblem: (type, points = 5, dateISO?: string, costData?: CostData) => {
-        const newProblem: MathProblem = {
+      addCost: (costData: Omit<CostData, 'id' | 'date'>) => {
+        const newCostData: CostData = {
           id: uuidv4(),
-          date: dateISO ?? new Date().toISOString(),
-          type,
-          points,
-          costData: costData ? { ...costData } : undefined,
+          date: new Date().toISOString(),
+          ...costData,
         };
         set((state) => ({
-          problems: [...state.problems, newProblem],
+          costData: [...state.costData, newCostData],
         }));
       },
 
-      removeProblem: (id) => {
+      removeCost: (id) => {
         set((state) => ({
-          problems: state.problems.filter((p) => p.id !== id),
+          costData: state.costData.filter((p) => p.id !== id),
         }));
       },
 
-      removeLastProblem: () => {
+      removeLastCost: () => {
         set((state) => {
-          if (state.problems.length === 0) return state;
-          const problems = [...state.problems];
-          problems.pop();
-          return { problems };
+          if (state.costData.length === 0) return state;
+          const costData = [...state.costData];
+          costData.pop();
+          return { costData };
         });
       },
 
-      updateProblem: (id, updates) => {
+      updateCost: (id, updates) => {
         set((state) => ({
-          problems: state.problems.map((p) =>
+          costData: state.costData.map((p) =>
             p.id === id ? { ...p, ...updates } : p
           ),
         }));
       },
 
-      getProblemsByType: (type) => {
-        return get().problems.filter(
-          (problem) =>
-            problem.type.subject === type.subject &&
-            problem.type.topic === type.topic
+      getCostsByType: (type) => {
+        return get().costData.filter(
+          (costData) =>
+            costData.cost === type.cost &&
+            costData.reason === type.reason
         );
       },
 
-      getTotalPoints: () => {
-        return get().problems.reduce((sum, problem) => sum + problem.points, 0);
+      getTotalCost: () => {
+        return get().costData.reduce((sum, costData) => sum + costData.cost, 0);
       },
 
-      getPointsByType: (type) => {
+      getCostByType: (reason) => {
         return get()
-          .problems.filter(
-            (problem) =>
-              problem.type.subject === type.subject &&
-              problem.type.topic === type.topic
-          )
-          .reduce((sum, problem) => sum + problem.points, 0);
+          .costData.filter((costData) => costData.reason === reason)
+          .reduce((sum, costData) => sum + costData.cost, 0);
       },
 
       clearAll: () => {
-        set({ problems: [] });
-      },
-      
-      getTotalCost: () => {
-        return get().problems.reduce((sum, problem) => {
-          return sum + (problem.costData?.cost || 0);
-        }, 0);
-      },
-      
-      getCostByType: (type) => {
-        return get()
-          .problems
-          .filter(problem => 
-            problem.type.subject === type.subject && 
-            problem.type.topic === type.topic
-          )
-          .reduce((sum, problem) => sum + (problem.costData?.cost || 0), 0);
+        set({ costData: [] });
       },
     }),
     {
@@ -126,82 +93,17 @@ export const useMathStore = create<MathStore>()(
 );
 
 // Utility function to get all problem types
-export const getAllProblemTypes = (): MathProblemType[] => [
-  {
-    subject: "Mathematics",
-    topic: "Calculas",
-  },
-  {
-    subject: "Mathematics",
-    topic: "Trigonometry",
-  },
-  {
-    subject: "Mathematics",
-    topic: "Algebra",
-  },
-  {
-    subject: "Mathematics",
-    topic: "Mechanics/Dynamics",
-  },
-  {
-    subject: "Mathematics",
-    topic: "Geometry",
-  },
-  {
-    subject: "Physics",
-    topic: "Physics 1st Paper",
-  },
-  {
-    subject: "Physics",
-    topic: "Physics 2nd Paper",
-  },
-  {
-    subject: "ICT",
-    topic: "Coding & HTML",
-  },
-  {
-    subject: "ICT",
-    topic: "Number system & Digital Device",
-  },
-  {
-    subject: "Biology",
-    topic: "Biology 1st Paper",
-  },
-  {
-    subject: "Biology",
-    topic: "Biology 2nd Paper",
-  },
-  {
-    subject: "Bangla Grammer",
-    topic: "Bangla Grammer",
-  },
-  {
-    subject: "English Grammer",
-    topic: "English Grammer",
-  },
-  {
-    subject: "Chemistry",
-    topic: "Organic Chemistry",
-  },
-  {
-    subject: "Chemistry",
-    topic: "Inorganic Chemistry",
-  },
-  {
-    subject: "Chemistry",
-    topic: "Chemistry 1st Paper",
-  },
-];
+export const getAllProblemTypes = (): string[] => ["Household", "Transport", "Food", "Entertainment", "Education", "Health", "Other"];
 
 // Utility function to get points for all types
 // Returns an object keyed by "<subject>:<topic>" with total points per type
-export const getPointsForAllTypes = (): Record<string, number> => {
-  const store = useMathStore.getState();
+export const getCostForAllTypes = (): Record<string, number> => {
+  const store = useCostStore.getState();
   const types = getAllProblemTypes();
   const totals: Record<string, number> = {};
   for (const t of types) {
-    const key = `${t.subject}:${t.topic}`;
-    totals[key] = store.getPointsByType(t);
+    const key = `${t}`;
+    totals[key] = store.getCostByType(t);
   }
   return totals;
 };
