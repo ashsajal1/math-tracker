@@ -241,12 +241,12 @@ export default function Stats() {
                   dataKey="value"
                   label={({ name, percentage }) => `${name} (${percentage}%)`}
                 >
-                  {categoryData.map((entry, index) => (
+                  {categoryData.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value, name, props) => [`$${value}`, props.payload.name]}
+                  formatter={(value, _name, props) => [`$${value}`, props.payload.name]}
                 />
                 <Legend />
               </RechartsPieChart>
