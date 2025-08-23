@@ -1,53 +1,34 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useMathStore, getAllProblemTypes, MathProblemType } from "@/lib/store";
+import { Textarea } from "@/components/ui/textarea";
+import { useMathStore } from "@/lib/store";
 
 export default function CreateWork() {
   const { addProblem } = useMathStore();
-  const allTypes = getAllProblemTypes();
-
-  const subjects = useMemo(() => {
-    const set = new Set(allTypes.map((t) => t.subject));
-    return Array.from(set);
-  }, [allTypes]);
-
-  const [subject, setSubject] = useState<string>("Mathematics");
-  const topicsForSubject = useMemo(
-    () => allTypes.filter((t) => t.subject === subject).map((t) => t.topic),
-    [allTypes, subject]
-  );
-  const [topic, setTopic] = useState<string>("");
-  // Default points fixed at 5; remove points UI
+  
+  const [cost, setCost] = useState<number>(0);
+  const [reason, setReason] = useState<string>("");
+  const [note, setNote] = useState<string>("");
+  
+  // Default date to today
   const defaultDate = useMemo(() => {
     return new Date().toISOString().split("T")[0];
   }, []);
+  
   const [date, setDate] = useState<string>(defaultDate);
 
-  useEffect(() => {
-    // Set default topic when subject changes
-    setTopic((prev) =>
-      topicsForSubject.includes(prev) ? prev : topicsForSubject[0] || ""
-    );
-  }, [subject, topicsForSubject]);
-
-  const canSubmit = Boolean(subject && topic && date);
+  const canSubmit = Boolean(cost > 0 && reason);
 
   const handleCreate = () => {
     if (!canSubmit) return;
-    const type: MathProblemType = { subject, topic };
-    // Compose ISO with selected date and current time
+    
+    // Use current time for the timestamp
     const now = new Date();
     const [year, month, day] = date.split("-").map(Number);
+    
     const dt = new Date(
       year,
       month - 1,
@@ -56,43 +37,28 @@ export default function CreateWork() {
       now.getMinutes(),
       now.getSeconds()
     );
-    addProblem(type, 5, dt.toISOString());
+    
+    // Create a custom data object to store the additional fields
+    const customData = {
+      cost,
+      reason,
+      note: note || undefined, // Only include note if it's not empty
+    };
+    
+    // Add the problem with the custom data
+    // Using empty strings for subject and topic to maintain compatibility
+    addProblem({ subject: "", topic: "" }, 0, dt.toISOString(), customData);
+    
+    // Reset form
+    setCost(0);
+    setReason("");
+    setNote("");
+    setDate(defaultDate);
   };
 
   return (
     <Card className="p-4 space-y-4">
-      <div className="grid grid-cols-3 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label>Subject</Label>
-          <Select value={subject} onValueChange={setSubject}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select subject" />
-            </SelectTrigger>
-            <SelectContent>
-              {subjects.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Topic</Label>
-          <Select value={topic} onValueChange={setTopic}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select topic" />
-            </SelectTrigger>
-            <SelectContent>
-              {topicsForSubject.map((t) => (
-                <SelectItem key={t} value={t}>
-                  {t}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="space-y-4">
 
         <div className="space-y-2">
           <Label>Date</Label>
@@ -102,11 +68,43 @@ export default function CreateWork() {
             onChange={(e) => setDate(e.target.value)}
           />
         </div>
+
+        <div className="space-y-2">
+          <Label>Amount (৳)</Label>
+          <Input
+            type="number"
+            min="0"
+            step="0.01"
+            value={cost}
+            onChange={(e) => setCost(parseFloat(e.target.value) || 0)}
+            placeholder="Enter amount"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Reason for Cost</Label>
+          <Input
+            type="text"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Why was there a cost?"
+          />
+        </div>
+
+        <div className="md:col-span-2 space-y-2">
+          <Label>Additional Note (Optional)</Label>
+          <Textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Any additional notes..."
+            rows={3}
+          />
+        </div>
       </div>
 
       <div className="flex justify-end">
         <Button onClick={handleCreate} disabled={!canSubmit}>
-          Add Work
+          Add Cost Entry
         </Button>
       </div>
     </Card>
