@@ -1,18 +1,18 @@
 {
-  "name": "math-tracker",
+  "name": "cost-tracker",
   "private": true,
   "version": "0.1.0",
-  "description": "A modern web application to track and visualize math problem solving progress.",
+  "description": "A modern web application to track and visualize cost of items.",
   "author": "Sajal",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ashsajal1/math-tracker.git"
+    "url": "https://github.com/AshsajalPro/cost-tracker.git"
   },
   "bugs": {
-    "url": "https://github.com/ashsajal1/math-tracker/issues"
+    "url": "https://github.com/AshsajalPro/cost-tracker/issues"
   },
-  "homepage": "https://github.com/ashsajal1/math-tracker#readme",
+  "homepage": "https://github.com/AshsajalPro/cost-tracker#readme",
   "type": "module",
   "scripts": {
     "dev": "vite",
