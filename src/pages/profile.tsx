@@ -28,8 +28,19 @@ export default function Profile() {
     createFund,
     setActiveFund,
     activeFundId,
-    funds
+    funds,
+    getActiveFund
   } = useFundStore();
+  
+  const [selectedFundId, setSelectedFundId] = useState<string>(activeFundId || '');
+  const activeFund = getActiveFund();
+  
+  // Update selectedFundId when activeFundId changes
+  useEffect(() => {
+    if (activeFundId) {
+      setSelectedFundId(activeFundId);
+    }
+  }, [activeFundId]);
   
   // Get the active fund balance and transactions
   const fundBalance = activeFundId ? getFundBalance(activeFundId) : 0;
@@ -55,14 +66,18 @@ export default function Profile() {
   };
 
   const handleTransaction = () => {
-    if (!amount || amount <= 0 || !activeFundId) return;
+    if (!amount || amount <= 0 || !selectedFundId) return;
+
+    const targetFundId = selectedFundId || activeFundId;
+    if (!targetFundId) return;
 
     if (transactionType === 'deposit') {
-      deposit(amount, note || 'Deposit', activeFundId);
+      deposit(amount, note || 'Deposit', targetFundId);
     } else {
       // Check if there's enough balance before withdrawing
-      if (amount <= fundBalance) {
-        withdraw(amount, note || 'Withdrawal', activeFundId);
+      const currentBalance = getFundBalance(targetFundId);
+      if (amount <= currentBalance) {
+        withdraw(amount, note || 'Withdrawal', targetFundId);
       } else {
         alert('Insufficient funds for this withdrawal');
         return;
@@ -235,6 +250,27 @@ export default function Profile() {
             </div>
             
             <div className="space-y-2">
+              <Label>Fund</Label>
+              <Select 
+                value={selectedFundId}
+                onValueChange={(value) => setSelectedFundId(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select fund">
+                    {activeFund ? `${activeFund.name} ($${getFundBalance(activeFund.id)})` : 'Select fund'}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(funds || {}).map((fund) => (
+                    <SelectItem key={fund.id} value={fund.id}>
+                      {fund.name} (${getFundBalance(fund.id).toFixed(2)})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
               <Label>Transaction Type</Label>
               <Select 
                 value={transactionType} 
@@ -263,7 +299,9 @@ export default function Profile() {
             <Button 
               className="w-full gap-2" 
               onClick={handleTransaction}
-              disabled={!amount || amount <= 0 || (transactionType === 'withdrawal' && amount > fundBalance) || !activeFundId}
+              disabled={!amount || amount <= 0 || 
+                (transactionType === 'withdrawal' && selectedFundId && amount > getFundBalance(selectedFundId)) || 
+                !selectedFundId}
             >
               <Plus className="h-4 w-4" />
               {transactionType === 'deposit' ? 'Add Funds' : 'Withdraw Funds'}
