@@ -8,13 +8,10 @@ import uiReducer from './slices/uiSlice';
 
 // Export the math store
 import { 
-  useMathStore, 
+  useCostStore, 
   getAllProblemTypes, 
-  getPointsForAllTypes,
-  MathProblemType 
+  getCostForAllTypes,
 } from './costStore';
-
-export type { MathProblemType };
 
 const rootReducer = combineReducers({
   userPreferences: userPreferencesReducer,
@@ -54,4 +51,4 @@ export const useAppDispatch: () => AppDispatch = useDispatch;
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 
 // Export math store utilities
-export { useMathStore, getAllProblemTypes, getPointsForAllTypes }; 
+export { useCostStore, getAllProblemTypes, getCostForAllTypes }; 
