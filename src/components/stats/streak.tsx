@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Target } from "lucide-react";
 import NewStreakCongrats from "@/components/new-streak-congrats";
 import { useCostStore } from "@/lib/store";
 
@@ -80,14 +79,15 @@ export default function StreakCard() {
   return (
     <>
       <Card className="p-3 sm:p-6">
-        <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-2">
-          Streak
+        <p className="text-sm text-muted-foreground">
+          {streak} day{streak !== 1 ? 's' : ''} spending streak
         </p>
         <div className="flex items-center justify-between text-2xl sm:text-3xl font-bold">
-          <div className="flex items-center gap-2">
-            <Target className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-            <span>{streak} days</span>
-          </div>
+          <p className="text-xs text-muted-foreground">
+            {percentage < 100
+              ? `Keep it up! ${goal - streak} more days to reach your goal.`
+              : `You're on a roll!`}
+          </p>
           <span className="text-sm text-primary font-semibold">{streak}/{goal}</span>
         </div>
         <Progress value={percentage} className="mt-2 h-1" />

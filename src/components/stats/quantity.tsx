@@ -9,7 +9,7 @@ type QuantityCardProps = {
   pointsGoal?: number;   // kept for API compatibility, but dynamic goal is used
 };
 
-export default function QuantityCard({ problemsGoal = 10, pointsGoal = 50 }: QuantityCardProps) {
+export default function QuantityCard({ problemsGoal = 5, pointsGoal = 100 }: QuantityCardProps) {
   const { costData } = useCostStore();
 
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
@@ -42,12 +42,14 @@ export default function QuantityCard({ problemsGoal = 10, pointsGoal = 50 }: Qua
       {/* Problems Today */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <p className="text-xs sm:text-sm font-medium text-muted-foreground">Problems Solved Today</p>
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground">Expenses Today</p>
           <Brain className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
         </div>
         <div className="flex items-baseline justify-between">
-          <h3 className="text-lg sm:text-2xl font-bold">{countToday}</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground">Goal: {dynamicProblemsGoal}</p>
+          <div className="text-2xl font-bold">{countToday}</div>
+          <p className="text-sm text-muted-foreground">
+            {countToday === 1 ? "expense" : "expenses"} today
+          </p>
         </div>
         <Progress value={problemsProgress} className="h-1" />
       </div>
@@ -59,8 +61,10 @@ export default function QuantityCard({ problemsGoal = 10, pointsGoal = 50 }: Qua
           <Award className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
         </div>
         <div className="flex items-baseline justify-between">
-          <h3 className="text-lg sm:text-2xl font-bold">{pointsToday}</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground">Goal: {dynamicPointsGoal}</p>
+          <div className="text-2xl font-bold">${pointsToday.toFixed(2)}</div>
+          <p className="text-sm text-muted-foreground">
+            spent today
+          </p>
         </div>
         <Progress value={pointsProgress} className="h-1" />
       </div>

@@ -26,7 +26,10 @@ export default function TopCategoryCard() {
 
   return (
     <Card className="p-3 sm:p-6">
-      <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-2">Top Categories</p>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">Top Spending Categories</h3>
+        <Award className="h-5 w-5 text-primary" />
+      </div>
       {top3.length > 0 ? (
         <div className="space-y-2 sm:space-y-3">
           {top3.map((item) => {
@@ -38,7 +41,7 @@ export default function TopCategoryCard() {
                     <Award className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                     {item.subject}
                   </span>
-                  <span className="font-medium">{item.cost}</span>
+                  <span className="font-medium">${item.cost.toFixed(2)}</span>
                 </div>
                 <Progress value={value} className="h-1" />
               </div>
@@ -46,7 +49,9 @@ export default function TopCategoryCard() {
           })}
         </div>
       ) : (
-        <div className="text-sm text-muted-foreground">No data yet</div>
+        <p className="text-sm text-muted-foreground">
+          No data available. Start adding expenses to see your spending by category.
+        </p>
       )}
     </Card>
   );

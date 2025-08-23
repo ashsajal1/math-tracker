@@ -11,7 +11,7 @@ import {
 } from "recharts";
 import { motion } from "framer-motion";
 import { useCostStore, getAllProblemTypes } from "@/lib/store";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -103,68 +103,59 @@ export default function PointsGraph() {
   }, [filteredProblems, filter]);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h2 className="text-xl font-semibold text-foreground">
-              Points Over Time
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Visualize your progress and consistency.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select subject" />
-              </SelectTrigger>
-              <SelectContent>
-                {subjects.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="flex items-center space-x-2 bg-muted/50 p-1 rounded-lg">
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setFilter("week")}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                  filter === "week"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground/80"
-                }`}
-              >
-                Week
-              </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setFilter("month")}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                  filter === "month"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground/80"
-                }`}
-              >
-                Month
-              </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setFilter("all")}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                  filter === "all"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground/80"
-                }`}
-              >
-                All
-              </motion.button>
-            </div>
+    <Card className="p-3 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <h3 className="text-lg font-semibold">Spending Over Time</h3>
+        <div className="flex items-center gap-2">
+          <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              {subjects.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex items-center space-x-2 bg-muted/50 p-1 rounded-lg">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setFilter("week")}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                filter === "week"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground/80"
+              }`}
+            >
+              Week
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setFilter("month")}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                filter === "month"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground/80"
+              }`}
+            >
+              Month
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setFilter("all")}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                filter === "all"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground/80"
+              }`}
+            >
+              All
+            </motion.button>
           </div>
         </div>
-      </CardHeader>
+      </div>
       <CardContent>
         <div className="h-[150px] sm:h-[250px] md:h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -207,11 +198,7 @@ export default function PointsGraph() {
                 <YAxis
                   tickLine={false}
                   axisLine={false}
-                  tick={{
-                    fontSize: 12,
-                    fill: "hsl(var(--muted-foreground))",
-                  }}
-                  tickFormatter={(value) => `${value}`}
+                  tickFormatter={(value) => `$${value}`}
                   width={30}
                 />
                 <Tooltip
