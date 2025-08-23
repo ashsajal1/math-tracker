@@ -4,6 +4,7 @@ import RootLayout from './pages/Layout';
 import NotFound from './pages/not-found';
 import ErrorPage from './pages/error';
 import Stats from './pages/stats';
+import History from './pages/history';
 
 export const router = createBrowserRouter([
     {
@@ -18,6 +19,10 @@ export const router = createBrowserRouter([
             {
                 path:'/stats',
                 element: <Stats />
+            },
+            {
+                path:'/history',
+                element: <History />
             },
             {
                 path:'*',
