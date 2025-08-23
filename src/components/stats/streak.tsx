@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Target } from "lucide-react";
-import { useMathStore } from "@/lib/store";
 import NewStreakCongrats from "@/components/new-streak-congrats";
+import { useCostStore } from "@/lib/store";
 
 const startOfDay = (d: Date) => {
   const x = new Date(d);
@@ -20,7 +20,7 @@ const toLocalDateKey = (d: Date) => {
 };
 
 export default function StreakCard() {
-  const { problems } = useMathStore();
+  const { costData } = useCostStore();
   const [showCongrats, setShowCongrats] = useState(false);
   const timerRef = useRef<number | null>(null);
   const prevStreakRef = useRef(0);
@@ -28,7 +28,7 @@ export default function StreakCard() {
   const { streak, percentage, goal } = useMemo(() => {
     // Build a set of unique local-date keys (YYYY-MM-DD) from problems
     const days = new Set<string>(
-      problems.map((p) => toLocalDateKey(new Date(p.date)))
+      costData.map((p) => toLocalDateKey(new Date(p.date)))
     );
 
     // Count consecutive days ending today (local)
@@ -51,7 +51,7 @@ export default function StreakCard() {
     const dynamicGoal = Math.max(7, nextStreakSegment);
     const pct = Math.min(100, Math.round((count / dynamicGoal) * 100));
     return { streak: count, percentage: pct, goal: dynamicGoal };
-  }, [problems]);
+  }, [costData]);
 
   // When streak increases by exactly 1, show congrats after 3s
   useEffect(() => {

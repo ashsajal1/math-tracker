@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { motion } from "framer-motion";
-import { useMathStore, getAllProblemTypes } from "@/lib/store";
+import { useCostStore, getAllProblemTypes } from "@/lib/store";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Select,
@@ -31,20 +31,20 @@ import {
 type FilterType = "week" | "month" | "all";
 
 export default function PointsGraph() {
-  const { problems } = useMathStore();
+  const { costData } = useCostStore();
   const [filter, setFilter] = useState<FilterType>("week");
   const allTypes = getAllProblemTypes();
   const subjects = useMemo(() => {
-    const set = new Set(allTypes.map((t) => t.subject));
+    const set = new Set(allTypes.map((t) => t));
     return ["All", ...Array.from(set)];
   }, [allTypes]);
   const [selectedSubject, setSelectedSubject] = useState<string>("All");
 
   const filteredProblems = useMemo(() => {
-    let subjectFiltered = problems;
+    let subjectFiltered = costData;
     if (selectedSubject !== "All") {
-      subjectFiltered = problems.filter(
-        (p) => p.type.subject === selectedSubject
+      subjectFiltered = costData.filter(
+        (p) => p.reason === selectedSubject
       );
     }
 
@@ -66,7 +66,7 @@ export default function PointsGraph() {
       });
     }
     return subjectFiltered;
-  }, [problems, filter, selectedSubject]);
+  }, [costData, filter, selectedSubject]);
 
   const data = useMemo(() => {
     const grouped = filteredProblems.reduce((acc, problem) => {
@@ -74,7 +74,7 @@ export default function PointsGraph() {
       if (!acc[date]) {
         acc[date] = 0;
       }
-      acc[date] += problem.points;
+      acc[date] += problem.cost;
       return acc;
     }, {} as Record<string, number>);
 

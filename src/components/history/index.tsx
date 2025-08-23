@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useMathStore } from "@/lib/store";
+import { useCostStore } from "@/lib/store";
 import HistoryCard from "./history-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -7,12 +7,12 @@ import { Card } from "@/components/ui/card";
 const PAGE_SIZE = 5;
 
 export default function HistoryList() {
-  const { problems, removeProblem } = useMathStore();
+  const { costData, removeCost } = useCostStore();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const sorted = useMemo(() => {
-    return [...problems].sort((a, b) => b.date.localeCompare(a.date));
-  }, [problems]);
+    return [...costData].sort((a, b) => b.date.localeCompare(a.date));
+  }, [costData]);
 
   const visible = sorted.slice(0, visibleCount);
   const hasMore = visibleCount < sorted.length;
@@ -24,7 +24,7 @@ export default function HistoryList() {
           <p className="text-sm text-muted-foreground">No history yet. Add some problems to get started.</p>
         ) : (
           visible.map((p) => (
-            <HistoryCard key={p.id} problem={p} onRemove={removeProblem} />
+            <HistoryCard key={p.id} problem={p} onRemove={removeCost} />
           ))
         )}
       </div>
