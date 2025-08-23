@@ -4,6 +4,7 @@ import CreateWork from "@/components/history/create";
 import StatsSection from "@/components/stats";
 import Seo from "@/components/Seo";
 import PointsGraph from "@/components/stats/graph";
+import Dashboard from "@/components/stats/dashboard";
 
 export default function Home() {
   return (
@@ -21,6 +22,7 @@ export default function Home() {
         {/* Stats Cards */}
         <div className="hidden sm:block">
           <StatsSection />
+          <Dashboard />
         </div>
         <div className="flex flex-col gap-2">
           <PointsGraph />
@@ -28,6 +30,7 @@ export default function Home() {
 
           <div className="sm:hidden">
             <StatsSection />
+            <Dashboard />
           </div>
           <HistoryList />
         </div>
