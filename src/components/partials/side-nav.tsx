@@ -2,42 +2,43 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { HiOutlineXMark } from "react-icons/hi2";
 import { Link } from 'react-router-dom';
 import { ModeToggle } from '../mode-toggle';
-import Text from '../custom-ui/text';
+
 import { 
-    Sparkles, 
-    CreditCard, 
-    BookOpen, 
-    Newspaper, 
-    LogIn, 
-    UserPlus,
-    BarChart3,
+    Home,
+    PlusCircle,
+    History,
+    PieChart,
     Settings,
-    HelpCircle
+    HelpCircle,
+    User,
+    DollarSign,
+    Receipt,
+    Wallet
 } from 'lucide-react';
 
 const menuItems = [
     {
-        title: "Main",
+        title: "Navigation",
         items: [
-            { to: "/features", label: "Features", icon: <Sparkles className="w-4 h-4" /> },
-            { to: "/pricing", label: "Pricing", icon: <CreditCard className="w-4 h-4" /> },
-            { to: "/docs", label: "Documentation", icon: <BookOpen className="w-4 h-4" /> },
-            { to: "/blog", label: "Blog", icon: <Newspaper className="w-4 h-4" /> },
+            { to: "/", label: "Dashboard", icon: <Home className="w-5 h-5" /> },
+            { to: "/add", label: "Add Expense", icon: <PlusCircle className="w-5 h-5" /> },
+            { to: "/history", label: "Expense History", icon: <History className="w-5 h-5" /> },
+            { to: "/stats", label: "Statistics", icon: <PieChart className="w-5 h-5" /> },
         ]
     },
     {
         title: "Account",
         items: [
-            { to: "/login", label: "Sign in", icon: <LogIn className="w-4 h-4" /> },
-            { to: "/signup", label: "Create account", icon: <UserPlus className="w-4 h-4" /> },
+            { to: "/profile", label: "Profile", icon: <User className="w-5 h-5" /> },
+            { to: "/settings", label: "Settings", icon: <Settings className="w-5 h-5" /> },
         ]
     },
     {
         title: "Resources",
         items: [
-            { to: "/analytics", label: "Analytics", icon: <BarChart3 className="w-4 h-4" /> },
-            { to: "/settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
-            { to: "/help", label: "Help Center", icon: <HelpCircle className="w-4 h-4" /> },
+            { to: "/budget", label: "Budget", icon: <Wallet className="w-5 h-5" /> },
+            { to: "/reports", label: "Reports", icon: <Receipt className="w-5 h-5" /> },
+            { to: "/help", label: "Help Center", icon: <HelpCircle className="w-5 h-5" /> },
         ]
     }
 ];
@@ -72,7 +73,12 @@ export default function SideNav({ isOpen, handleClose }: { isOpen: boolean, hand
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.2 }}
                             >
-                                <Text className='text-xl font-bold text-primary' label='SaaSify' />
+                                <div className="flex items-center gap-2">
+    <DollarSign className="w-6 h-6 text-green-600" />
+    <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent">
+        Cost Tracker
+    </span>
+</div>
                             </motion.div>
                             <div className="flex items-center gap-2">
                                 <motion.div
@@ -87,7 +93,7 @@ export default function SideNav({ isOpen, handleClose }: { isOpen: boolean, hand
                                     whileTap={{ scale: 0.9 }}
                                     onClick={handleClose}
                                 >
-                                    <HiOutlineXMark className='h-6 w-6 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary cursor-pointer transition-colors' />
+                                    <HiOutlineXMark className='h-6 w-6 text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 cursor-pointer transition-colors' />
                                 </motion.button>
                             </div>
                         </div>

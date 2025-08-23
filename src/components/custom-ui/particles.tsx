@@ -1,14 +1,14 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { 
-    Code2, 
-    BarChart3, 
-    Database, 
-    Cloud, 
-    Shield, 
-    Zap,
-    LineChart,
-    Server
+    DollarSign,
+    CreditCard,
+    Wallet,
+    PieChart,
+    TrendingUp,
+    TrendingDown,
+    WalletCards,
+    Receipt
 } from "lucide-react";
 
 interface Particle {
@@ -25,19 +25,19 @@ interface Particle {
 export default function Particles() {
     const [particles, setParticles] = useState<Particle[]>([]);
 
-    const icons = [
-        <Code2 className="w-8 h-8" />,
-        <BarChart3 className="w-8 h-8" />,
-        <Database className="w-8 h-8" />,
-        <Cloud className="w-8 h-8" />,
-        <Shield className="w-8 h-8" />,
-        <Zap className="w-8 h-8" />,
-        <LineChart className="w-8 h-8" />,
-        <Server className="w-8 h-8" />
-    ];
-
     useEffect(() => {
-        // Generate particles with SaaS-related icons
+        const icons = [
+            <DollarSign key="dollar" className="w-6 h-6" />,
+            <CreditCard key="credit-card" className="w-6 h-6" />,
+            <Wallet key="wallet" className="w-6 h-6" />,
+            <PieChart key="pie-chart" className="w-6 h-6" />,
+            <TrendingUp key="trending-up" className="w-6 h-6" />,
+            <TrendingDown key="trending-down" className="w-6 h-6" />,
+            <WalletCards key="wallet-cards" className="w-6 h-6" />,
+            <Receipt key="receipt" className="w-6 h-6" />
+        ];
+
+        // Generate particles with finance-related icons
         const newParticles = Array.from({ length: 15 }, (_, i) => ({
             id: i,
             x: Math.random() * 100,
