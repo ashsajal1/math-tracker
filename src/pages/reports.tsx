@@ -188,9 +188,9 @@ export default function Reports() {
               <CardTitle>Filters</CardTitle>
               <CardDescription>Customize your report view</CardDescription>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col md:flex-row w-full items-center gap-2">
               <Select value={timeRange} onValueChange={handleTimeRangeChange}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Select time range" />
                 </SelectTrigger>
@@ -210,7 +210,7 @@ export default function Reports() {
                     id="date"
                     variant="outline"
                     className={cn(
-                      "w-[240px] justify-start text-left font-normal",
+                      "w-full justify-start text-left font-normal",
                       !dateRange && "text-muted-foreground"
                     )}
                   >
