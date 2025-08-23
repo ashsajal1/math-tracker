@@ -7,22 +7,31 @@ export type MathProblemType = {
   topic: string;
 };
 
+export interface CostData {
+  cost: number;
+  reason: string;
+  note?: string;
+}
+
 export interface MathProblem {
   id: string;
   date: string; // ISO date string
   type: MathProblemType;
   points: number;
+  costData?: CostData;
 }
 
 interface MathStore {
   problems: MathProblem[];
-  addProblem: (type: MathProblemType, points?: number, dateISO?: string) => void;
+  addProblem: (type: MathProblemType, points?: number, dateISO?: string, costData?: CostData) => void;
   removeProblem: (id: string) => void;
   removeLastProblem: () => void;
   updateProblem: (id: string, updates: Partial<MathProblem>) => void;
   getProblemsByType: (type: MathProblemType) => MathProblem[];
   getTotalPoints: () => number;
   getPointsByType: (type: MathProblemType) => number;
+  getTotalCost: () => number;
+  getCostByType: (type: MathProblemType) => number;
   clearAll: () => void;
 }
 
@@ -31,12 +40,13 @@ export const useMathStore = create<MathStore>()(
     (set, get) => ({
       problems: [],
 
-      addProblem: (type, points = 5, dateISO?: string) => {
+      addProblem: (type, points = 5, dateISO?: string, costData?: CostData) => {
         const newProblem: MathProblem = {
           id: uuidv4(),
           date: dateISO ?? new Date().toISOString(),
           type,
           points,
+          costData: costData ? { ...costData } : undefined,
         };
         set((state) => ({
           problems: [...state.problems, newProblem],
@@ -90,6 +100,22 @@ export const useMathStore = create<MathStore>()(
 
       clearAll: () => {
         set({ problems: [] });
+      },
+      
+      getTotalCost: () => {
+        return get().problems.reduce((sum, problem) => {
+          return sum + (problem.costData?.cost || 0);
+        }, 0);
+      },
+      
+      getCostByType: (type) => {
+        return get()
+          .problems
+          .filter(problem => 
+            problem.type.subject === type.subject && 
+            problem.type.topic === type.topic
+          )
+          .reduce((sum, problem) => sum + (problem.costData?.cost || 0), 0);
       },
     }),
     {

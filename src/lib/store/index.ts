@@ -12,7 +12,7 @@ import {
   getAllProblemTypes, 
   getPointsForAllTypes,
   MathProblemType 
-} from './mathStore';
+} from './costStore';
 
 export type { MathProblemType };
 
