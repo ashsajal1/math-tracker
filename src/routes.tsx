@@ -7,6 +7,7 @@ import Stats from './pages/stats';
 import History from './pages/history';
 import Settings from './pages/settings';
 import Reports from './pages/reports';
+import Profile from './pages/profile';
 
 export const router = createBrowserRouter([
     {
@@ -33,6 +34,10 @@ export const router = createBrowserRouter([
             {
                 path:'/reports',
                 element: <Reports />
+            },
+            {
+                path:'/profile',
+                element: <Profile />
             },
             {
                 path:'*',
