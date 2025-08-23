@@ -7,61 +7,66 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Download, Plus, Trash2, Wallet, TrendingUp, TrendingDown } from 'lucide-react';
 import { useCostStore } from '@/lib/store/costStore';
+import useFundStore from '@/lib/store/fundStore';
 import { format } from 'date-fns';
 
-interface FundTransaction {
-  id: string;
-  amount: number;
-  type: 'add' | 'withdraw';
-  date: string;
-  note: string;
-}
-
 export default function Profile() {
-  const [funds, setFunds] = useState<number>(0);
-  const [transactions, setTransactions] = useState<FundTransaction[]>([]);
   const [amount, setAmount] = useState<number>(0);
-  const [transactionType, setTransactionType] = useState<'add' | 'withdraw'>('add');
+  const [fundName, setFundName] = useState<string>('');
+  const [initialAmount, setInitialAmount] = useState<number>(0);
+  const [transactionType, setTransactionType] = useState<'deposit' | 'withdrawal'>('deposit');
   const [note, setNote] = useState<string>('');
+  const [showCreateFund, setShowCreateFund] = useState<boolean>(false);
+  
   const { costData } = useCostStore();
-
-  // Load saved funds and transactions from localStorage on component mount
+  const { 
+    deposit, 
+    withdraw,
+    deleteTransaction,
+    getFundBalance,
+    getTransactionsByFund,
+    createFund,
+    setActiveFund,
+    activeFundId,
+    funds
+  } = useFundStore();
+  
+  // Get the active fund balance and transactions
+  const fundBalance = activeFundId ? getFundBalance(activeFundId) : 0;
+  const fundTransactions = activeFundId ? getTransactionsByFund(activeFundId) : [];
+  
+  // Check if there are any funds
+  const hasFunds = Object.keys(funds || {}).length > 0;
+  
+  // Show create fund form if no funds exist
   useEffect(() => {
-    const savedFunds = localStorage.getItem('userFunds');
-    const savedTransactions = localStorage.getItem('fundTransactions');
-    
-    if (savedFunds) {
-      setFunds(parseFloat(savedFunds));
+    if (!hasFunds) {
+      setShowCreateFund(true);
     }
-    
-    if (savedTransactions) {
-      setTransactions(JSON.parse(savedTransactions));
-    }
-  }, []);
-
-  // Save funds and transactions to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('userFunds', funds.toString());
-    localStorage.setItem('fundTransactions', JSON.stringify(transactions));
-  }, [funds, transactions]);
+  }, [hasFunds]);
+  
+  const handleCreateFund = () => {
+    if (!fundName.trim()) return;
+    const newFundId = createFund(fundName, initialAmount, 'Main fund');
+    setActiveFund(newFundId);
+    setFundName('');
+    setInitialAmount(0);
+    setShowCreateFund(false);
+  };
 
   const handleTransaction = () => {
-    if (!amount || amount <= 0) return;
+    if (!amount || amount <= 0 || !activeFundId) return;
 
-    const transaction: FundTransaction = {
-      id: Date.now().toString(),
-      amount,
-      type: transactionType,
-      date: new Date().toISOString(),
-      note: note || (transactionType === 'add' ? 'Funds added' : 'Funds withdrawn')
-    };
-
-    setTransactions(prev => [transaction, ...prev]);
-    
-    if (transactionType === 'add') {
-      setFunds(prev => prev + amount);
+    if (transactionType === 'deposit') {
+      deposit(amount, note || 'Deposit', activeFundId);
     } else {
-      setFunds(prev => Math.max(0, prev - amount));
+      // Check if there's enough balance before withdrawing
+      if (amount <= fundBalance) {
+        withdraw(amount, note || 'Withdrawal', activeFundId);
+      } else {
+        alert('Insufficient funds for this withdrawal');
+        return;
+      }
     }
 
     // Reset form
@@ -69,33 +74,18 @@ export default function Profile() {
     setNote('');
   };
 
-  const deleteTransaction = (id: string) => {
-    const transaction = transactions.find(t => t.id === id);
-    if (!transaction) return;
-
-    // Update funds
-    if (transaction.type === 'add') {
-      setFunds(prev => Math.max(0, prev - transaction.amount));
-    } else {
-      setFunds(prev => prev + transaction.amount);
-    }
-
-    // Remove transaction
-    setTransactions(prev => prev.filter(t => t.id !== id));
-  };
-
   // Calculate total spent from cost data
-  const totalSpent = costData.reduce((sum, item) => sum + item.cost, 0);
-  const availableBalance = funds - totalSpent;
+  const totalSpent = costData.reduce((sum: number, item: { cost: number }) => sum + item.cost, 0);
+  const availableBalance = fundBalance - totalSpent;
 
   // Export transactions to CSV
   const exportToCSV = () => {
     const headers = ['Date', 'Type', 'Amount', 'Note'];
     const csvContent = [
       headers.join(','),
-      ...transactions.map(tx => [
+      ...fundTransactions.map((tx) => [
         format(new Date(tx.date), 'yyyy-MM-dd HH:mm'),
-        tx.type === 'add' ? 'Deposit' : 'Withdrawal',
+        tx.type === 'deposit' ? 'Deposit' : 'Withdrawal',
         tx.amount.toFixed(2),
         `"${tx.note}"`
       ].join(','))
@@ -110,6 +100,50 @@ export default function Profile() {
     URL.revokeObjectURL(url);
   };
 
+  if (showCreateFund) {
+    return (
+      <div className="container mx-auto py-6 max-w-md">
+        <Card>
+          <CardHeader>
+            <CardTitle>Create Your First Fund</CardTitle>
+            <CardDescription>Get started by creating a fund to manage your money</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="fundName">Fund Name</Label>
+              <Input
+                id="fundName"
+                value={fundName}
+                onChange={(e) => setFundName(e.target.value)}
+                placeholder="e.g., Personal, Business, Savings"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="initialAmount">Initial Amount ($)</Label>
+              <Input
+                id="initialAmount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={initialAmount || ''}
+                onChange={(e) => setInitialAmount(parseFloat(e.target.value) || 0)}
+                placeholder="0.00"
+              />
+            </div>
+            <Button 
+              className="w-full gap-2" 
+              onClick={handleCreateFund}
+              disabled={!fundName.trim()}
+            >
+              <Plus className="h-4 w-4" />
+              Create Fund
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -117,10 +151,16 @@ export default function Profile() {
           <h1 className="text-3xl font-bold">Profile & Funding</h1>
           <p className="text-muted-foreground">Manage your funds and track expenses</p>
         </div>
-        <Button variant="outline" onClick={exportToCSV} className="gap-2">
-          <Download className="h-4 w-4" />
-          Export History
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportToCSV} className="gap-2">
+            <Download className="h-4 w-4" />
+            Export History
+          </Button>
+          <Button variant="outline" onClick={() => setShowCreateFund(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            New Fund
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
@@ -129,12 +169,12 @@ export default function Profile() {
             <CardDescription>Total Funds</CardDescription>
             <CardTitle className="text-3xl flex items-center">
               <Wallet className="h-6 w-6 mr-2 text-primary" />
-              ${funds.toFixed(2)}
+              ${fundBalance.toFixed(2)}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-sm text-muted-foreground">
-              {funds > 0 ? (
+              {fundBalance > 0 ? (
                 <span>Available to spend</span>
               ) : (
                 <span>No funds available</span>
@@ -198,14 +238,14 @@ export default function Profile() {
               <Label>Transaction Type</Label>
               <Select 
                 value={transactionType} 
-                onValueChange={(value: 'add' | 'withdraw') => setTransactionType(value)}
+                onValueChange={(value: 'deposit' | 'withdrawal') => setTransactionType(value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="add">Add Funds</SelectItem>
-                  <SelectItem value="withdraw">Withdraw Funds</SelectItem>
+                  <SelectItem value="deposit">Add Funds</SelectItem>
+                  <SelectItem value="withdrawal">Withdraw Funds</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -223,10 +263,10 @@ export default function Profile() {
             <Button 
               className="w-full gap-2" 
               onClick={handleTransaction}
-              disabled={!amount || amount <= 0 || (transactionType === 'withdraw' && amount > funds)}
+              disabled={!amount || amount <= 0 || (transactionType === 'withdrawal' && amount > fundBalance) || !activeFundId}
             >
               <Plus className="h-4 w-4" />
-              {transactionType === 'add' ? 'Add Funds' : 'Withdraw Funds'}
+              {transactionType === 'deposit' ? 'Add Funds' : 'Withdraw Funds'}
             </Button>
           </CardContent>
         </Card>
@@ -237,7 +277,7 @@ export default function Profile() {
             <CardDescription>Your funding history</CardDescription>
           </CardHeader>
           <CardContent>
-            {transactions.length === 0 ? (
+            {fundTransactions && fundTransactions.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No transactions yet
               </div>
@@ -254,24 +294,24 @@ export default function Profile() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {transactions.map((tx) => (
+                    {fundTransactions.map((tx) => (
                       <TableRow key={tx.id}>
                         <TableCell className="text-sm">
                           {format(new Date(tx.date), 'MMM d, yyyy')}
                         </TableCell>
                         <TableCell>
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            tx.type === 'add' 
+                            tx.type === 'deposit' 
                               ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
                               : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
                           }`}>
-                            {tx.type === 'add' ? 'Deposit' : 'Withdrawal'}
+                            {tx.type === 'deposit' ? 'Deposit' : 'Withdrawal'}
                           </span>
                         </TableCell>
                         <TableCell className={`text-right font-medium ${
-                          tx.type === 'add' ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'
+                          tx.type === 'deposit' ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'
                         }`}>
-                          {tx.type === 'add' ? '+' : '-'}${tx.amount.toFixed(2)}
+                          {tx.type === 'deposit' ? '+' : '-'}${tx.amount.toFixed(2)}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground truncate max-w-[150px]">
                           {tx.note}
