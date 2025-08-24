@@ -17,13 +17,11 @@ export default function Dashboard() {
   const { 
     transactions, 
     getTransactionsByDateRange, 
-    globalBalance,
-    getTotalCostsByCategory 
+    globalBalance
   } = useFundStore();
   
   const [monthlyData, setMonthlyData] = useState<MonthlySummary[]>([]);
   const [currentMonthSummary, setCurrentMonthSummary] = useState<MonthlySummary | null>(null);
-  const [costsByCategory, setCostsByCategory] = useState<Record<string, number>>({});
   const [totalSummary, setTotalSummary] = useState({
     totalFunds: 0,
     totalSpent: 0,
@@ -38,9 +36,6 @@ export default function Dashboard() {
       ...summary,
       remaining: globalBalance
     });
-
-    // Update costs by category
-    setCostsByCategory(getTotalCostsByCategory());
 
     // Calculate monthly summaries
     const monthlySummaries = calculateMonthlySummary(transactions);
@@ -62,7 +57,7 @@ export default function Dashboard() {
       month: now.toLocaleString('default', { month: 'short' }),
       year: now.getFullYear(),
     });
-  }, [transactions, getTransactionsByDateRange, globalBalance, getTotalCostsByCategory]);
+  }, [transactions, getTransactionsByDateRange, globalBalance]);
 
   const StatCard = ({ title, value, description, icon: Icon, trend }: { 
     title: string; 
@@ -172,34 +167,7 @@ export default function Dashboard() {
         </div>
         
         <div>
-          <h3 className="text-lg font-semibold mb-4">Cost Categories</h3>
-          {Object.entries(costsByCategory).length > 0 ? (
-            <Card className="mb-4">
-              <CardHeader>
-                <CardTitle className="text-lg">Cost Distribution</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {Object.entries(costsByCategory).map(([category, amount]) => (
-                    <div key={category} className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>{category}</span>
-                        <span>{formatCurrency(amount)}</span>
-                      </div>
-                      <Progress 
-                        value={totalSummary.totalSpent ? (amount / totalSummary.totalSpent) * 100 : 0} 
-                        className="h-2" 
-                      />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <p className="text-muted-foreground">No cost data available</p>
-          )}
-
-          <h3 className="text-lg font-semibold mb-4 mt-6">Current Month</h3>
+          <h3 className="text-lg font-semibold mb-4">Current Month</h3>
           {currentMonthSummary ? (
             <MonthlyCard {...currentMonthSummary} />
           ) : (
