@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useCostStore } from "@/lib/store";
+import { useCostStore } from "@/lib/store/costStore";
+import useFundStore from "@/lib/store/fundStore";
 import {
   Select,
   SelectContent,
@@ -24,10 +25,12 @@ type ReasonType =
 
 export default function CreateWork() {
   const { addCost } = useCostStore();
+  const { funds, activeFundId } = useFundStore();
 
   const [cost, setCost] = useState<number>(0);
   const [reason, setReason] = useState<ReasonType>("Household");
   const [note, setNote] = useState<string>("");
+  const [selectedFundId, setSelectedFundId] = useState<string | undefined>(activeFundId ?? undefined);
 
   // Default date to today
   const defaultDate = useMemo(() => {
@@ -46,7 +49,7 @@ export default function CreateWork() {
       cost,
       reason,
       note: note || undefined, // Only include note if it's not empty
-      fund: undefined, // Optional fund field
+      fundId: selectedFundId, // Use the selected fund ID
     };
 
     // Add the cost data
@@ -108,7 +111,27 @@ export default function CreateWork() {
         </section>
 
         
-        <div className="md:col-span-2 space-y-2">
+        <div className="space-y-2">
+          <Label>Fund (Optional)</Label>
+          <Select
+            value={selectedFundId || 'no-fund'}
+            onValueChange={(value) => setSelectedFundId(value === 'no-fund' ? undefined : value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select a fund (optional)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="no-fund">No fund</SelectItem>
+              {Object.values(funds).map((fund) => (
+                <SelectItem key={fund.id} value={fund.id}>
+                  {fund.name} (৳{fund.balance})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
           <Label>Additional Note (Optional)</Label>
           <Textarea
             value={note}
