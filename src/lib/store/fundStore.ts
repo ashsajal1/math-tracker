@@ -35,9 +35,9 @@ interface FundState {
   setActiveFund: (id: string) => void;
   
   // Transactions
-  deposit: (amount: number, note?: string, fundId?: string) => void;
-  withdraw: (amount: number, note?: string, fundId?: string) => void;
-  transfer: (amount: number, toFundId: string, note?: string, fromFundId?: string) => void;
+  deposit: (amount: number, note?: string, fundId?: string) => string | undefined;
+  withdraw: (amount: number, note?: string, fundId?: string) => string | undefined;
+  transfer: (amount: number, toFundId: string, note?: string, fromFundId?: string) => { fromId: string; toId: string } | undefined;
   deleteTransaction: (id: string) => void;
   
   // Getters
@@ -126,11 +126,11 @@ const useFundStore = create<FundState>()(
       },
 
       // Transactions
-      deposit: (amount, note = 'Deposit', fundId) => {
+  deposit: (amount, note = 'Deposit', fundId) => {
         const targetFundId = fundId || get().activeFundId;
         if (!targetFundId || amount <= 0) return;
         
-        const transaction: FundTransaction = {
+  const depositTx: FundTransaction = {
           id: uuidv4(),
           fundId: targetFundId,
           amount,
@@ -147,8 +147,10 @@ const useFundStore = create<FundState>()(
               balance: (state.funds[targetFundId]?.balance || 0) + amount,
             },
           },
-          transactions: [transaction, ...state.transactions],
+          transactions: [depositTx, ...state.transactions],
         }));
+
+        return depositTx.id;
       },
 
       withdraw: (amount, note = 'Withdrawal', fundId) => {
@@ -158,7 +160,7 @@ const useFundStore = create<FundState>()(
         const fund = get().funds[targetFundId];
         if (!fund || amount > fund.balance) return;
         
-        const transaction: FundTransaction = {
+        const withdrawTx: FundTransaction = {
           id: uuidv4(),
           fundId: targetFundId,
           amount,
@@ -175,8 +177,10 @@ const useFundStore = create<FundState>()(
               balance: fund.balance - amount,
             },
           },
-          transactions: [transaction, ...state.transactions],
+          transactions: [withdrawTx, ...state.transactions],
         }));
+
+        return withdrawTx.id;
       },
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -189,12 +193,12 @@ const useFundStore = create<FundState>()(
         
         if (!sourceFund || !targetFund || amount > sourceFund.balance) return;
         
-        const transactionId = uuidv4();
+        const baseTransactionId = uuidv4();
         const timestamp = new Date().toISOString();
         
         // Create withdrawal from source
         const withdrawal: FundTransaction = {
-          id: `${transactionId}-from`,
+          id: `${baseTransactionId}-from`,
           fundId: sourceFundId,
           amount,
           type: 'transfer',
@@ -204,8 +208,8 @@ const useFundStore = create<FundState>()(
         };
         
         // Create deposit to target
-        const deposit: FundTransaction = {
-          id: `${transactionId}-to`,
+        const depositTx: FundTransaction = {
+          id: `${baseTransactionId}-to`,
           fundId: toFundId,
           amount,
           type: 'transfer',
@@ -226,8 +230,10 @@ const useFundStore = create<FundState>()(
               balance: targetFund.balance + amount,
             },
           },
-          transactions: [withdrawal, deposit, ...state.transactions],
+          transactions: [withdrawal, depositTx, ...state.transactions],
         }));
+
+        return { fromId: withdrawal.id, toId: depositTx.id };
       },
 
       deleteTransaction: (id) => {
