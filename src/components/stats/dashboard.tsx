@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import useFundStore, { type FundTransaction } from '@/lib/store/fundStore';
@@ -15,7 +15,7 @@ const formatCurrency = (amount: number): string => {
 };
 
 export default function Dashboard() {
-  const { transactions, globalBalance } = useFundStore();
+  const { transactions, globalBalance, globalCost } = useFundStore();
   
   const [monthlyData, setMonthlyData] = useState<MonthlySummary[]>([]);
 
@@ -35,30 +35,6 @@ export default function Dashboard() {
     setMonthlyData(monthlySummaries);
   }, [transactions]);
 
-  const StatCard = ({ title, value, description, icon: Icon, trend }: { 
-    title: string; 
-    value: string; 
-    description: string; 
-    icon: React.ElementType;
-    trend?: 'up' | 'down' | 'neutral';
-  }) => (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <div className={`h-4 w-4 ${
-          trend === 'up' ? 'text-green-500' : 
-          trend === 'down' ? 'text-red-500' : 
-          'text-muted-foreground'
-        }`}>
-          <Icon className="h-4 w-4" />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
-  );
 
   const MonthlyCard = ({ month, year, totalFunds, totalSpent }: MonthlySummary) => {
     const spendingPercentage = totalFunds > 0 ? (totalSpent / totalFunds) * 100 : 0;
@@ -96,13 +72,34 @@ export default function Dashboard() {
       <h2 className="text-2xl font-bold tracking-tight">Funds Overview</h2>
       
       <div className="mb-6">
-        <StatCard
-          title="Global Balance"
-          value={formatCurrency(globalBalance)}
-          description={`${transactions.length} transactions total`}
-          icon={DollarSign}
-          trend={globalBalance > 0 ? "up" : "neutral"}
-        />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Global Overview</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4">
+              <div>
+                <div className="text-2xl font-bold text-green-500">{formatCurrency(globalBalance)}</div>
+                <p className="text-xs text-muted-foreground">Available Balance ({transactions.length} transactions)</p>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-red-500">-{formatCurrency(globalCost)}</div>
+                <p className="text-xs text-muted-foreground">Total Spent Since Last Deposit</p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Spending Ratio</span>
+                  <span>{globalBalance > 0 ? Math.round((globalCost / (globalBalance + globalCost)) * 100) : 0}%</span>
+                </div>
+                <Progress 
+                  value={globalBalance > 0 ? (globalCost / (globalBalance + globalCost)) * 100 : 0} 
+                  className="h-2" 
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div>
