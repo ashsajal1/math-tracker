@@ -1,16 +1,16 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { v4 as uuidv4 } from 'uuid';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { v4 as uuidv4 } from "uuid";
 
 export interface FundTransaction {
   id: string;
-  fundId: string;  // Reference to the fund
+  fundId: string; // Reference to the fund
   amount: number;
-  type: 'deposit' | 'withdrawal' | 'transfer' | 'cost';
+  type: "deposit" | "withdrawal" | "transfer" | "cost";
   date: string;
   note: string;
   transferTo?: string; // For transfer transactions
-  category?: string;  // For cost transactions
+  category?: string; // For cost transactions
   description?: string; // For cost transactions
 }
 
@@ -31,34 +31,60 @@ interface FundState {
   activeFundId: string | null;
   globalBalance: number; // New global balance state
   globalCost: number;
-  
+
   // Cost Management
-  addCost: (amount: number, category: string, note?: string, fundId?: string) => string;
+  addCost: (
+    amount: number,
+    category: string,
+    note?: string,
+    fundId?: string
+  ) => string;
   getTransactionsByCategory: (category: string) => FundTransaction[];
   getCostTransactions: () => FundTransaction[];
   getTotalCostsByCategory: () => Record<string, number>;
-  
+
   // Fund Management
-  createFund: (name: string, initialBalance?: number, description?: string, category?: string) => string;
-  updateFund: (id: string, updates: Partial<Omit<Fund, 'id' | 'balance' | 'createdAt'>>) => void;
+  createFund: (
+    name: string,
+    initialBalance?: number,
+    description?: string,
+    category?: string
+  ) => string;
+  updateFund: (
+    id: string,
+    updates: Partial<Omit<Fund, "id" | "balance" | "createdAt">>
+  ) => void;
   deleteFund: (id: string) => void;
   setActiveFund: (id: string) => void;
-  
-  // Global Balance Management
-  increaseGlobalBalance: (amount: number) => void;
-  decreaseGlobalBalance: (amount: number) => void;
-  
+
   // Transactions
-  deposit: (amount: number, note?: string, fundId?: string) => string | undefined;
-  withdraw: (amount: number, note?: string, fundId?: string) => string | undefined;
-  transfer: (amount: number, toFundId: string, note?: string, fromFundId?: string) => { fromId: string; toId: string } | undefined;
+  deposit: (
+    amount: number,
+    note?: string,
+    fundId?: string
+  ) => string | undefined;
+  withdraw: (
+    amount: number,
+    note?: string,
+    fundId?: string
+  ) => string | undefined;
+  transfer: (
+    amount: number,
+    toFundId: string,
+    note?: string,
+    fromFundId?: string
+  ) => { fromId: string; toId: string } | undefined;
   deleteTransaction: (id: string) => void;
-  
+
   // Getters
   getFundBalance: (fundId?: string) => number;
   getTotalBalance: () => number;
   getTransactionsByFund: (fundId: string) => FundTransaction[];
-  getTransactionsByDateRange: (startDate: Date, endDate: Date, fundId?: string) => FundTransaction[];
+  getTransactionsByDateRange: (
+    startDate: Date,
+    endDate: Date,
+    fundId?: string
+  ) => FundTransaction[];
   getFundTransactions: (fundId: string) => FundTransaction[];
   getFundsByCategory: (category: string) => Fund[];
   getActiveFund: () => Fund | null;
@@ -73,23 +99,13 @@ const useFundStore = create<FundState>()(
       globalBalance: 0,
       globalCost: 0,
 
-      // Global Balance Management
-      increaseGlobalBalance: (amount: number) => {
-        set((state) => ({
-          ...state,
-          globalBalance: state.globalBalance + amount
-        }));
-      },
-
-      decreaseGlobalBalance: (amount: number) => {
-        set((state) => ({
-          ...state,
-          globalBalance: Math.max(0, state.globalBalance - amount)
-        }));
-      },
-
       // Fund Management
-      createFund: (name, initialBalance = 0, description = '', category = 'General') => {
+      createFund: (
+        name,
+        initialBalance = 0,
+        description = "",
+        category = "General"
+      ) => {
         const fundId = uuidv4();
         const newFund: Fund = {
           id: fundId,
@@ -111,9 +127,9 @@ const useFundStore = create<FundState>()(
             id: uuidv4(),
             fundId,
             amount: initialBalance,
-            type: 'deposit',
+            type: "deposit",
             date: new Date().toISOString(),
-            note: 'Initial balance',
+            note: "Initial balance",
           };
 
           set((state) => ({
@@ -143,11 +159,15 @@ const useFundStore = create<FundState>()(
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { [id]: _removedFund, ...remainingFunds } = state.funds;
           const isActiveFund = state.activeFundId === id;
-          
+
           return {
             funds: remainingFunds,
-            activeFundId: isActiveFund ? Object.keys(remainingFunds)[0] || null : state.activeFundId,
-            transactions: state.transactions.filter(tx => tx.fundId !== id && tx.transferTo !== id),
+            activeFundId: isActiveFund
+              ? Object.keys(remainingFunds)[0] || null
+              : state.activeFundId,
+            transactions: state.transactions.filter(
+              (tx) => tx.fundId !== id && tx.transferTo !== id
+            ),
           };
         });
       },
@@ -157,15 +177,15 @@ const useFundStore = create<FundState>()(
       },
 
       // Transactions
-      deposit: (amount, note = 'Deposit', fundId) => {
+      deposit: (amount, note = "Deposit", fundId) => {
         const targetFundId = fundId || get().activeFundId;
         if (!targetFundId || amount <= 0) return;
-        
+
         const depositTx: FundTransaction = {
           id: uuidv4(),
           fundId: targetFundId,
           amount,
-          type: 'deposit',
+          type: "deposit",
           date: new Date().toISOString(),
           note,
         };
@@ -183,18 +203,19 @@ const useFundStore = create<FundState>()(
         }));
 
         return depositTx.id;
-      },      withdraw: (amount, note = 'Withdrawal', fundId) => {
+      },
+      withdraw: (amount, note = "Withdrawal", fundId) => {
         const targetFundId = fundId || get().activeFundId;
         if (!targetFundId || amount <= 0) return;
-        
+
         const fund = get().funds[targetFundId];
         if (!fund || amount > fund.balance) return;
-        
+
         const withdrawTx: FundTransaction = {
           id: uuidv4(),
           fundId: targetFundId,
           amount,
-          type: 'withdrawal',
+          type: "withdrawal",
           date: new Date().toISOString(),
           note,
         };
@@ -209,42 +230,48 @@ const useFundStore = create<FundState>()(
           },
           transactions: [withdrawTx, ...state.transactions],
           globalBalance: Math.max(0, state.globalBalance - amount),
-          globalCost: state.globalCost + amount // Track withdrawal as cost
+          globalCost: state.globalCost + amount, // Track withdrawal as cost
         }));
 
         return withdrawTx.id;
       },
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      transfer: (amount, toFundId, _note = 'Transfer', fromFundId) => {
+      transfer: (amount, toFundId, _note = "Transfer", fromFundId) => {
         const sourceFundId = fromFundId || get().activeFundId;
-        if (!sourceFundId || !toFundId || sourceFundId === toFundId || amount <= 0) return;
-        
+        if (
+          !sourceFundId ||
+          !toFundId ||
+          sourceFundId === toFundId ||
+          amount <= 0
+        )
+          return;
+
         const sourceFund = get().funds[sourceFundId];
         const targetFund = get().funds[toFundId];
-        
+
         if (!sourceFund || !targetFund || amount > sourceFund.balance) return;
-        
+
         const baseTransactionId = uuidv4();
         const timestamp = new Date().toISOString();
-        
+
         // Create withdrawal from source
         const withdrawal: FundTransaction = {
           id: `${baseTransactionId}-from`,
           fundId: sourceFundId,
           amount,
-          type: 'transfer',
+          type: "transfer",
           date: timestamp,
           note: `Transfer to ${targetFund.name}`,
           transferTo: toFundId,
         };
-        
+
         // Create deposit to target
         const depositTx: FundTransaction = {
           id: `${baseTransactionId}-to`,
           fundId: toFundId,
           amount,
-          type: 'transfer',
+          type: "transfer",
           date: timestamp,
           note: `Transfer from ${sourceFund.name}`,
           transferTo: sourceFundId,
@@ -278,30 +305,41 @@ const useFundStore = create<FundState>()(
           const newState = { ...state };
 
           // Update global balance and cost based on transaction type
-          if (transaction.type === 'deposit') {
-            newState.globalBalance = Math.max(0, state.globalBalance - transaction.amount);
+          if (transaction.type === "deposit") {
+            newState.globalBalance = Math.max(
+              0,
+              state.globalBalance - transaction.amount
+            );
             // Don't reset globalCost when deleting deposits as it would mess up tracking
-          } else if (transaction.type === 'withdrawal' || transaction.type === 'cost') {
+          } else if (
+            transaction.type === "withdrawal" ||
+            transaction.type === "cost"
+          ) {
             newState.globalBalance = state.globalBalance + transaction.amount;
-            newState.globalCost = Math.max(0, state.globalCost - transaction.amount); // Reduce globalCost
+            newState.globalCost = Math.max(
+              0,
+              state.globalCost - transaction.amount
+            ); // Reduce globalCost
           }
-          
+
           // Handle different transaction types
-          if (transaction.type === 'transfer') {
+          if (transaction.type === "transfer") {
             // For transfers, we need to find and remove both sides of the transaction
-            const otherTransactionId = id.endsWith('-from') 
-              ? id.replace('-from', '-to')
-              : id.replace('-to', '-from');
-              
-            const otherTransaction = state.transactions.find(t => t.id === otherTransactionId);
-            
+            const otherTransactionId = id.endsWith("-from")
+              ? id.replace("-from", "-to")
+              : id.replace("-to", "-from");
+
+            const otherTransaction = state.transactions.find(
+              (t) => t.id === otherTransactionId
+            );
+
             if (otherTransaction) {
               // Update the fund balances
               const fundId = transaction.fundId;
               const otherFundId = otherTransaction.fundId;
               const fund = state.funds[fundId];
               const otherFund = state.funds[otherFundId];
-              
+
               if (fund && otherFund) {
                 newState.funds = {
                   ...state.funds,
@@ -315,23 +353,24 @@ const useFundStore = create<FundState>()(
                   },
                 };
               }
-              
+
               // Remove both transactions
               newState.transactions = state.transactions.filter(
-                t => t.id !== id && t.id !== otherTransactionId
+                (t) => t.id !== id && t.id !== otherTransactionId
               );
             }
           } else {
             // For regular deposits/withdrawals
             const fundId = transaction.fundId;
             const fund = state.funds[fundId];
-            
+
             if (fund) {
               const amount = transaction.amount;
-              const newBalance = transaction.type === 'deposit'
-                ? fund.balance - amount
-                : fund.balance + amount;
-                
+              const newBalance =
+                transaction.type === "deposit"
+                  ? fund.balance - amount
+                  : fund.balance + amount;
+
               newState.funds = {
                 ...state.funds,
                 [fundId]: {
@@ -339,11 +378,13 @@ const useFundStore = create<FundState>()(
                   balance: Math.max(0, newBalance),
                 },
               };
-              
-              newState.transactions = state.transactions.filter(t => t.id !== id);
+
+              newState.transactions = state.transactions.filter(
+                (t) => t.id !== id
+              );
             }
           }
-          
+
           return newState;
         });
       },
@@ -365,21 +406,22 @@ const useFundStore = create<FundState>()(
 
       getTotalBalance: () => {
         return Object.values(get().funds).reduce(
-          (sum, fund) => sum + fund.balance, 0
+          (sum, fund) => sum + fund.balance,
+          0
         );
       },
 
       getTransactionsByFund: (fundId) => {
         return get().transactions.filter(
-          t => t.fundId === fundId || t.transferTo === fundId
+          (t) => t.fundId === fundId || t.transferTo === fundId
         );
       },
 
       getTransactionsByDateRange: (startDate, endDate, fundId) => {
-        const transactions = fundId 
+        const transactions = fundId
           ? get().getTransactionsByFund(fundId)
           : get().transactions;
-          
+
         return transactions.filter((transaction) => {
           const transactionDate = new Date(transaction.date);
           return transactionDate >= startDate && transactionDate <= endDate;
@@ -387,12 +429,12 @@ const useFundStore = create<FundState>()(
       },
 
       getFundTransactions: (fundId) => {
-        return get().transactions.filter(tx => tx.fundId === fundId);
+        return get().transactions.filter((tx) => tx.fundId === fundId);
       },
 
       getFundsByCategory: (category) => {
         return Object.values(get().funds).filter(
-          fund => fund.category === category
+          (fund) => fund.category === category
         );
       },
 
@@ -402,14 +444,14 @@ const useFundStore = create<FundState>()(
       },
 
       // Cost Management Functions
-      addCost: (amount, category, note = '', fundId) => {
-        if (amount <= 0) return '';
-        
+      addCost: (amount, category, note = "", fundId) => {
+        if (amount <= 0) return "";
+
         const costTx: FundTransaction = {
           id: uuidv4(),
-          fundId: fundId || get().activeFundId || '',
+          fundId: fundId || get().activeFundId || "",
           amount,
-          type: 'cost',
+          type: "cost",
           category,
           date: new Date().toISOString(),
           note,
@@ -418,7 +460,7 @@ const useFundStore = create<FundState>()(
         set((state) => ({
           transactions: [costTx, ...state.transactions],
           globalBalance: Math.max(0, state.globalBalance - amount),
-          globalCost: state.globalCost + amount
+          globalCost: state.globalCost + amount,
         }));
 
         // If a fund is specified, update its balance too
@@ -428,7 +470,10 @@ const useFundStore = create<FundState>()(
               ...state.funds,
               [fundId]: {
                 ...state.funds[fundId],
-                balance: Math.max(0, (state.funds[fundId]?.balance || 0) - amount),
+                balance: Math.max(
+                  0,
+                  (state.funds[fundId]?.balance || 0) - amount
+                ),
               },
             },
           }));
@@ -439,26 +484,26 @@ const useFundStore = create<FundState>()(
 
       getTransactionsByCategory: (category) => {
         return get().transactions.filter(
-          tx => tx.type === 'cost' && tx.category === category
+          (tx) => tx.type === "cost" && tx.category === category
         );
       },
 
       getCostTransactions: () => {
-        return get().transactions.filter(tx => tx.type === 'cost');
+        return get().transactions.filter((tx) => tx.type === "cost");
       },
 
       getTotalCostsByCategory: () => {
-        return get().transactions
-          .filter(tx => tx.type === 'cost')
+        return get()
+          .transactions.filter((tx) => tx.type === "cost")
           .reduce((acc, tx) => {
-            const category = tx.category || 'Other';
+            const category = tx.category || "Other";
             acc[category] = (acc[category] || 0) + tx.amount;
             return acc;
           }, {} as Record<string, number>);
       },
     }),
     {
-      name: 'fund-storage', // unique name for localStorage key
+      name: "fund-storage", // unique name for localStorage key
       storage: createJSONStorage(() => localStorage), // use localStorage
       version: 1,
     }
