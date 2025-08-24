@@ -25,7 +25,7 @@ type ReasonType =
 
 export default function CreateWork() {
   const { addCost } = useCostStore();
-  const { funds, activeFundId } = useFundStore();
+  const { funds, activeFundId, withdraw } = useFundStore();
 
   const [cost, setCost] = useState<number>(0);
   const [reason, setReason] = useState<ReasonType>("Household");
@@ -43,6 +43,18 @@ export default function CreateWork() {
 
   const handleCreate = () => {
     if (!canSubmit) return;
+
+    // Check fund balance if a fund is selected
+    if (selectedFundId) {
+      const selectedFund = funds[selectedFundId];
+      if (!selectedFund || selectedFund.balance < cost) {
+        alert('Insufficient funds in the selected account');
+        return;
+      }
+      
+      // Withdraw from the fund
+      withdraw(cost, `Cost: ${reason}${note ? ` - ${note}` : ''}`, selectedFundId);
+    }
 
     // Create the cost data object
     const costData = {
