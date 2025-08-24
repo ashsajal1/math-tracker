@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { persist, createJSONStorage, devtools } from "zustand/middleware";
 import { v4 as uuidv4 } from "uuid";
 
 export interface FundTransaction {
@@ -91,7 +91,7 @@ interface FundState {
 }
 
 const useFundStore = create<FundState>()(
-  persist(
+  devtools(persist(
     (set, get) => ({
       funds: {},
       transactions: [],
@@ -134,6 +134,7 @@ const useFundStore = create<FundState>()(
 
           set((state) => ({
             transactions: [transaction, ...state.transactions],
+            globalBalance: state.globalBalance + initialBalance,
           }));
         }
 
@@ -508,6 +509,6 @@ const useFundStore = create<FundState>()(
       version: 1,
     }
   )
-);
+));
 
 export default useFundStore;
