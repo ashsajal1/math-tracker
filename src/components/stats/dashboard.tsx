@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import useFundStore from '@/lib/store/fundStore';
+import useFundStore, { type FundTransaction } from '@/lib/store/fundStore';
+import type { FundTransaction as UtilFundTransaction, CategoryType } from '@/lib/utils/fundCalculations';
 import { calculateFundSummary, calculateMonthlySummary, type MonthlySummary } from '@/lib/utils/fundCalculations';
 import { Calendar, DollarSign, TrendingDown, TrendingUp } from 'lucide-react';
 
@@ -30,15 +31,25 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
+    // Transform transactions to match utility function expectations
+    const transformTransactions = (txs: FundTransaction[]): UtilFundTransaction[] => txs.map(tx => ({
+      id: tx.id,
+      amount: tx.amount,
+      type: tx.type === 'transfer' ? 'withdrawal' : tx.type,
+      date: tx.date,
+      note: tx.note || '',
+      category: tx.category as CategoryType | undefined
+    }));
+
     // Calculate total summary including costs
-    const summary = calculateFundSummary(transactions);
+    const totalSummaryData = calculateFundSummary(transformTransactions(transactions));
     setTotalSummary({
-      ...summary,
+      ...totalSummaryData,
       remaining: globalBalance
     });
 
     // Calculate monthly summaries
-    const monthlySummaries = calculateMonthlySummary(transactions);
+    const monthlySummaries = calculateMonthlySummary(transformTransactions(transactions));
     setMonthlyData(monthlySummaries);
 
     // Calculate current month summary
@@ -47,13 +58,10 @@ export default function Dashboard() {
     const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     
     const currentMonthTransactions = getTransactionsByDateRange(firstDayOfMonth, lastDayOfMonth);
-    const currentMonthSummary = calculateFundSummary(currentMonthTransactions);
-    const monthCosts = currentMonthTransactions.filter(tx => tx.type === 'cost')
-      .reduce((sum, tx) => sum + tx.amount, 0);
+    const currentMonthSummaryData = calculateFundSummary(transformTransactions(currentMonthTransactions));
     
     setCurrentMonthSummary({
-      ...currentMonthSummary,
-      totalSpent: monthCosts,
+      ...currentMonthSummaryData,
       month: now.toLocaleString('default', { month: 'short' }),
       year: now.getFullYear(),
     });

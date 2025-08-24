@@ -1,7 +1,7 @@
-// Define the FundTransaction type here to avoid circular dependencies
-type CategoryType = "Household" | "Transport" | "Food" | "Entertainment" | "Education" | "Health" | "Other";
+// Define and export the types
+export type CategoryType = "Household" | "Transport" | "Food" | "Entertainment" | "Education" | "Health" | "Other";
 
-type FundTransaction = {
+export type FundTransaction = {
   id: string;
   type: 'deposit' | 'withdrawal' | 'cost';
   amount: number;
