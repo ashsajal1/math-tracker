@@ -1,3 +1,5 @@
+import { CostData } from "../store/costStore";
+
 // Define the FundTransaction type here to avoid circular dependencies
 type FundTransaction = {
   id: string;
@@ -16,9 +18,24 @@ export interface FundSummary {
   percentageSpent: number;
 }
 
+export interface CostSummary {
+  totalCost: number;
+  costByReason: Record<string, number>;
+  highestCostReason: string;
+  averageCost: number;
+}
+
 export interface MonthlySummary extends FundSummary {
   month: string;
   year: number;
+}
+
+export interface MonthlyCostSummary {
+  month: string;
+  year: number;
+  totalCost: number;
+  costByReason: Record<string, number>;
+  averageCost: number;
 }
 
 export const calculateFundSummary = (transactions: FundTransaction[]): FundSummary => {
@@ -91,4 +108,75 @@ export const getFundsByRange = (transactions: FundTransaction[], startDate: Date
   });
   
   return calculateFundSummary(filteredTransactions);
+};
+
+// New cost calculation functions
+export const calculateCostSummary = (costs: CostData[]): CostSummary => {
+  const costByReason: Record<string, number> = {};
+  let totalCost = 0;
+
+  costs.forEach(cost => {
+    costByReason[cost.reason] = (costByReason[cost.reason] || 0) + cost.cost;
+    totalCost += cost.cost;
+  });
+
+  const highestCostReason = Object.entries(costByReason)
+    .sort(([, a], [, b]) => b - a)[0]?.[0] || '';
+
+  return {
+    totalCost,
+    costByReason,
+    highestCostReason,
+    averageCost: costs.length ? totalCost / costs.length : 0,
+  };
+};
+
+export const calculateMonthlyCostSummary = (costs: CostData[]): MonthlyCostSummary[] => {
+  const monthlyData: Record<string, MonthlyCostSummary> = {};
+  
+  costs.forEach(cost => {
+    const date = new Date(cost.date);
+    const month = date.toLocaleString('default', { month: 'short' });
+    const year = date.getFullYear();
+    const key = `${year}-${date.getMonth()}`;
+    
+    if (!monthlyData[key]) {
+      monthlyData[key] = {
+        month,
+        year,
+        totalCost: 0,
+        costByReason: {},
+        averageCost: 0,
+      };
+    }
+    
+    monthlyData[key].totalCost += cost.cost;
+    monthlyData[key].costByReason[cost.reason] = 
+      (monthlyData[key].costByReason[cost.reason] || 0) + cost.cost;
+  });
+  
+  // Calculate averages and sort by date
+  const summaries = Object.values(monthlyData);
+  summaries.forEach(summary => {
+    const monthCosts = costs.filter(cost => {
+      const date = new Date(cost.date);
+      return date.toLocaleString('default', { month: 'short' }) === summary.month 
+        && date.getFullYear() === summary.year;
+    });
+    summary.averageCost = monthCosts.length ? summary.totalCost / monthCosts.length : 0;
+  });
+  
+  return summaries.sort((a, b) => {
+    if (a.year !== b.year) return b.year - a.year;
+    return b.month.localeCompare(a.month);
+  });
+};
+
+export const getCostsByRange = (costs: CostData[], startDate: Date, endDate: Date): CostSummary => {
+  const filteredCosts = costs.filter(cost => {
+    const costDate = new Date(cost.date);
+    return costDate >= startDate && costDate <= endDate;
+  });
+  
+  return calculateCostSummary(filteredCosts);
 };
