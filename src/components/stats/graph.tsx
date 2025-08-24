@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { motion } from "framer-motion";
-import { useCostStore, getAllProblemTypes } from "@/lib/store";
+import useFundStore from "@/lib/store/fundStore";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
@@ -31,20 +31,23 @@ import {
 type FilterType = "week" | "month" | "all";
 
 export default function PointsGraph() {
-  const { costData } = useCostStore();
+  const { transactions } = useFundStore();
   const [filter, setFilter] = useState<FilterType>("week");
-  const allTypes = getAllProblemTypes();
-  const subjects = useMemo(() => {
-    const set = new Set(allTypes.map((t) => t));
-    return ["All", ...Array.from(set)];
-  }, [allTypes]);
+  
+  const costCategories = useMemo(() => {
+    const categories = transactions
+      .filter(tx => tx.type === 'cost')
+      .map(tx => tx.category || 'Other');
+    const uniqueCategories = new Set(categories);
+    return ["All", ...Array.from(uniqueCategories)];
+  }, [transactions]);
   const [selectedSubject, setSelectedSubject] = useState<string>("All");
 
-  const filteredProblems = useMemo(() => {
-    let subjectFiltered = costData;
+  const filteredTransactions = useMemo(() => {
+    let filtered = transactions.filter(tx => tx.type === 'cost');
     if (selectedSubject !== "All") {
-      subjectFiltered = costData.filter(
-        (p) => p.reason === selectedSubject
+      filtered = filtered.filter(
+        tx => tx.category === selectedSubject
       );
     }
 
@@ -52,29 +55,29 @@ export default function PointsGraph() {
     if (filter === "week") {
       const start = startOfWeek(now);
       const end = endOfWeek(now);
-      return subjectFiltered.filter((p) => {
-        const d = new Date(p.date);
+      return filtered.filter(tx => {
+        const d = new Date(tx.date);
         return d >= start && d <= end;
       });
     }
     if (filter === "month") {
       const start = startOfMonth(now);
       const end = endOfMonth(now);
-      return subjectFiltered.filter((p) => {
-        const d = new Date(p.date);
+      return filtered.filter(tx => {
+        const d = new Date(tx.date);
         return d >= start && d <= end;
       });
     }
-    return subjectFiltered;
-  }, [costData, filter, selectedSubject]);
+    return filtered;
+  }, [transactions, filter, selectedSubject]);
 
   const data = useMemo(() => {
-    const grouped = filteredProblems.reduce((acc, problem) => {
-      const date = format(new Date(problem.date), "yyyy-MM-dd");
+    const grouped = filteredTransactions.reduce((acc, tx) => {
+      const date = format(new Date(tx.date), "yyyy-MM-dd");
       if (!acc[date]) {
         acc[date] = 0;
       }
-      acc[date] += problem.cost;
+      acc[date] += tx.amount;
       return acc;
     }, {} as Record<string, number>);
 
@@ -100,7 +103,7 @@ export default function PointsGraph() {
     return Object.entries(grouped)
       .map(([date, points]) => ({ date, points }))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [filteredProblems, filter]);
+  }, [filteredTransactions, filter]);
 
   return (
     <Card className="p-3 sm:p-6">
@@ -112,9 +115,9 @@ export default function PointsGraph() {
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
-              {subjects.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
+              {costCategories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
                 </SelectItem>
               ))}
             </SelectContent>

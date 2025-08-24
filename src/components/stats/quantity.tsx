@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Brain, Award } from "lucide-react";
-import { useCostStore } from "@/lib/store";
+import useFundStore from "@/lib/store/fundStore";
 
 type QuantityCardProps = {
   problemsGoal?: number; // kept for API compatibility, but dynamic goal is used
@@ -10,16 +10,17 @@ type QuantityCardProps = {
 };
 
 export default function QuantityCard({ problemsGoal = 5, pointsGoal = 100 }: QuantityCardProps) {
-  const { costData } = useCostStore();
+  const { transactions } = useFundStore();
 
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
 
   const { countToday, pointsToday } = useMemo(() => {
-    const todays = costData.filter((p) => p.date.startsWith(today));
-    const count = todays.length;
-    const pts = todays.reduce((sum, p) => sum + p.cost, 0);
+    const todaysCosts = transactions
+      .filter(tx => tx.type === 'cost' && tx.date.startsWith(today));
+    const count = todaysCosts.length;
+    const pts = todaysCosts.reduce((sum, tx) => sum + tx.amount, 0);
     return { countToday: count, pointsToday: pts };
-  }, [costData, today]);
+  }, [transactions, today]);
 
   // Dynamic goals:
   // - Problems: segment of 10 that advances at the exact peak. Example:
