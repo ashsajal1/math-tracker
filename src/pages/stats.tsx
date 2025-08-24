@@ -1,10 +1,9 @@
 import { useState, useMemo } from 'react';
-import { useCostStore } from '@/lib/store/costStore';
 import { format, subDays, isSameDay } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
 import { DollarSign, PieChart, BarChart3, TrendingUp, Filter } from 'lucide-react';
 import { ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line } from 'recharts';
+import useFundStore from '@/lib/store/fundStore';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
@@ -18,32 +17,34 @@ const timeRanges = [
 
 export default function Stats() {
   const [timeRange, setTimeRange] = useState('30');
-  const { costData } = useCostStore();
+  const { transactions } = useFundStore();
 
   // Filter costs based on selected time range
   const filteredCosts = useMemo(() => {
-    if (!costData.length) return [];
+    const costTransactions = transactions.filter(tx => tx.type === 'cost');
+    if (!costTransactions.length) return [];
     
-    if (timeRange === 'all') return costData;
+    if (timeRange === 'all') return costTransactions;
     
     const days = parseInt(timeRange, 10);
     const cutoffDate = subDays(new Date(), days);
     
-    return costData.filter(cost => new Date(cost.date) >= cutoffDate);
-  }, [costData, timeRange]);
+    return costTransactions.filter(tx => new Date(tx.date) >= cutoffDate);
+  }, [transactions, timeRange]);
 
   // Calculate total expenses
   const totalExpenses = useMemo(() => {
-    return filteredCosts.reduce((sum, cost) => sum + cost.cost, 0);
+    return filteredCosts.reduce((sum, tx) => sum + tx.amount, 0);
   }, [filteredCosts]);
 
   // Group by category for pie chart
   const categoryData = useMemo(() => {
     const categoryMap = new Map<string, number>();
     
-    filteredCosts.forEach(cost => {
-      const current = categoryMap.get(cost.reason) || 0;
-      categoryMap.set(cost.reason, current + cost.cost);
+    filteredCosts.forEach(tx => {
+      const category = tx.category || 'Other';
+      const current = categoryMap.get(category) || 0;
+      categoryMap.set(category, current + tx.amount);
     });
     
     return Array.from(categoryMap.entries()).map(([name, value]) => ({
@@ -64,11 +65,11 @@ export default function Stats() {
     for (let i = days - 1; i >= 0; i--) {
       const date = subDays(today, i);
       const dateStr = format(date, 'MMM dd');
-      const dayCosts = filteredCosts.filter(cost => 
-        isSameDay(new Date(cost.date), date)
+      const dayCosts = filteredCosts.filter(tx => 
+        isSameDay(new Date(tx.date), date)
       );
       
-      const total = dayCosts.reduce((sum, cost) => sum + cost.cost, 0);
+      const total = dayCosts.reduce((sum, tx) => sum + tx.amount, 0);
       
       result.push({
         date: dateStr,
@@ -82,11 +83,11 @@ export default function Stats() {
   // Get top expenses
   const topExpenses = useMemo(() => {
     return [...filteredCosts]
-      .sort((a, b) => b.cost - a.cost)
+      .sort((a, b) => b.amount - a.amount)
       .slice(0, 5)
-      .map(expense => ({
-        ...expense,
-        date: format(new Date(expense.date), 'MMM dd, yyyy')
+      .map(tx => ({
+        ...tx,
+        date: format(new Date(tx.date), 'MMM dd, yyyy')
       }));
   }, [filteredCosts]);
 
@@ -99,9 +100,9 @@ export default function Stats() {
       count: 0
     }));
     
-    filteredCosts.forEach(cost => {
-      const day = new Date(cost.date).getDay();
-      result[day].total += cost.cost;
+    filteredCosts.forEach(tx => {
+      const day = new Date(tx.date).getDay();
+      result[day].total += tx.amount;
       result[day].count++;
     });
     
@@ -168,7 +169,7 @@ export default function Stats() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${(totalExpenses / (parseInt(timeRange) || 30)).toFixed(2)}
+              ${(totalExpenses / Math.max(1, filteredCosts.length)).toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
               Per day
@@ -289,11 +290,11 @@ export default function Stats() {
                 {topExpenses.map((expense) => (
                   <div key={expense.id} className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <p className="text-sm font-medium leading-none">{expense.reason}</p>
+                      <p className="text-sm font-medium leading-none">{expense.category || 'Other'}</p>
                       <p className="text-sm text-muted-foreground">{expense.date}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium">${expense.cost.toFixed(2)}</p>
+                      <p className="font-medium">${expense.amount.toFixed(2)}</p>
                       <p className="text-xs text-muted-foreground">
                         {expense.note || 'No note'}
                       </p>

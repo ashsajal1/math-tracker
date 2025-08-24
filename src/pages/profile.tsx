@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Download, Plus, Trash2, Wallet, TrendingUp, TrendingDown } from 'lucide-react';
-import { useCostStore } from '@/lib/store/costStore';
 import useFundStore from '@/lib/store/fundStore';
 import { format } from 'date-fns';
 
@@ -18,7 +17,6 @@ export default function Profile() {
   const [note, setNote] = useState<string>('');
   const [showCreateFund, setShowCreateFund] = useState<boolean>(false);
   
-  const { costData } = useCostStore();
   const { 
     deposit, 
     withdraw,
@@ -29,7 +27,8 @@ export default function Profile() {
     setActiveFund,
     activeFundId,
     funds,
-    getActiveFund
+    getActiveFund,
+    transactions
   } = useFundStore();
   
   const [selectedFundId, setSelectedFundId] = useState<string>(activeFundId || '');
@@ -89,8 +88,10 @@ export default function Profile() {
     setNote('');
   };
 
-  // Calculate total spent from cost data
-  const totalSpent = costData.reduce((sum: number, item: { cost: number }) => sum + item.cost, 0);
+  // Calculate total spent from cost transactions
+  const totalSpent = transactions
+    .filter(tx => tx.type === 'cost')
+    .reduce((sum, tx) => sum + tx.amount, 0);
   const availableBalance = fundBalance - totalSpent;
 
   // Export transactions to CSV
@@ -208,7 +209,7 @@ export default function Profile() {
           </CardHeader>
           <CardContent>
             <div className="text-sm text-muted-foreground">
-              {costData.length} transactions
+              {transactions.filter(tx => tx.type === 'cost').length} transactions
             </div>
           </CardContent>
         </Card>

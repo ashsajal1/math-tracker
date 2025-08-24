@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DateRange } from 'react-day-picker';
 import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
 import { Download, BarChart3, PieChart, LineChart, Calendar as CalendarIcon, Filter } from 'lucide-react';
-import { useCostStore } from '@/lib/store/costStore';
+import useFundStore from '@/lib/store/fundStore';
 import { ResponsiveContainer, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart as RechartsPieChart, Pie, Cell, LineChart as RechartsLineChart, Line } from 'recharts';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -18,7 +18,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'
 type TimeRange = '7d' | '30d' | '90d' | 'month' | 'year' | 'custom';
 
 export default function Reports() {
-  const { costData } = useCostStore();
+  const { transactions } = useFundStore();
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: subDays(new Date(), 29),
@@ -30,9 +30,11 @@ export default function Reports() {
   // Get all unique categories
   const categories = useMemo(() => {
     const categorySet = new Set<string>();
-    costData.forEach(item => categorySet.add(item.reason));
+    transactions
+      .filter(tx => tx.type === 'cost')
+      .forEach(tx => categorySet.add(tx.category || 'Other'));
     return Array.from(categorySet);
-  }, [costData]);
+  }, [transactions]);
 
   // Filter data based on selected time range
   const filteredData = useMemo(() => {
@@ -41,19 +43,22 @@ export default function Reports() {
     const from = dateRange.from;
     const to = dateRange.to || dateRange.from;
     
-    return costData.filter(item => {
-      const itemDate = new Date(item.date);
-      return itemDate >= from && itemDate <= to;
-    });
-  }, [costData, dateRange]);
+    return transactions
+      .filter(tx => tx.type === 'cost')
+      .filter(tx => {
+        const itemDate = new Date(tx.date);
+        return itemDate >= from && itemDate <= to;
+      });
+  }, [transactions, dateRange]);
 
   // Generate data for charts
   const categoryData = useMemo(() => {
     const categoryMap = new Map<string, number>();
     
-    filteredData.forEach(item => {
-      const current = categoryMap.get(item.reason) || 0;
-      categoryMap.set(item.reason, current + item.cost);
+    filteredData.forEach(tx => {
+      const category = tx.category || 'Other';
+      const current = categoryMap.get(category) || 0;
+      categoryMap.set(category, current + tx.amount);
     });
     
     return Array.from(categoryMap.entries()).map(([name, value]) => ({
@@ -71,18 +76,18 @@ export default function Reports() {
     const days = eachDayOfInterval({ start: from, end: to });
     
     return days.map(day => {
-      const dayData = filteredData.filter(item => 
-        isSameDay(new Date(item.date), day)
+      const dayData = filteredData.filter(tx => 
+        isSameDay(new Date(tx.date), day)
       );
       
-      const dayTotal = dayData.reduce((sum, item) => sum + item.cost, 0);
+      const dayTotal = dayData.reduce((sum, tx) => sum + tx.amount, 0);
       
       return {
         date: format(day, 'MMM dd'),
         total: parseFloat(dayTotal.toFixed(2)),
-        ...dayData.reduce((acc, item) => ({
+        ...dayData.reduce((acc, tx) => ({
           ...acc,
-          [item.reason]: (acc[item.reason] || 0) + item.cost
+          [tx.category || 'Other']: (acc[tx.category || 'Other'] || 0) + tx.amount
         }), {} as Record<string, number>)
       };
     });
@@ -132,7 +137,7 @@ export default function Reports() {
 
   // Calculate total expenses
   const totalExpenses = useMemo(() => {
-    return filteredData.reduce((sum, item) => sum + item.cost, 0);
+    return filteredData.reduce((sum, tx) => sum + tx.amount, 0);
   }, [filteredData]);
 
   // Toggle category selection
@@ -149,11 +154,11 @@ export default function Reports() {
     const headers = ['Date', 'Category', 'Amount', 'Note'];
     const csvContent = [
       headers.join(','),
-      ...filteredData.map(item => [
-        format(new Date(item.date), 'yyyy-MM-dd'),
-        `"${item.reason}"`,
-        item.cost,
-        `"${item.note || ''}"`
+      ...filteredData.map(tx => [
+        format(new Date(tx.date), 'yyyy-MM-dd'),
+        `"${tx.category || 'Other'}"`,
+        tx.amount,
+        `"${tx.note || ''}"`
       ].join(','))
     ].join('\n');
 
