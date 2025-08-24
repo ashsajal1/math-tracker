@@ -30,6 +30,7 @@ interface FundState {
   transactions: FundTransaction[];
   activeFundId: string | null;
   globalBalance: number; // New global balance state
+  globalCost: number;
   
   // Cost Management
   addCost: (amount: number, category: string, note?: string, fundId?: string) => string;
@@ -70,6 +71,7 @@ const useFundStore = create<FundState>()(
       transactions: [],
       activeFundId: null,
       globalBalance: 0,
+      globalCost: 0,
 
       // Global Balance Management
       increaseGlobalBalance: (amount: number) => {
@@ -177,7 +179,7 @@ const useFundStore = create<FundState>()(
             },
           },
           transactions: [depositTx, ...state.transactions],
-          globalBalance: state.globalBalance + amount
+          globalBalance: state.globalBalance + amount,
         }));
 
         return depositTx.id;
@@ -206,7 +208,8 @@ const useFundStore = create<FundState>()(
             },
           },
           transactions: [withdrawTx, ...state.transactions],
-          globalBalance: Math.max(0, state.globalBalance - amount)
+          globalBalance: Math.max(0, state.globalBalance - amount),
+          globalCost: state.globalCost + amount // Track withdrawal as cost
         }));
 
         return withdrawTx.id;
@@ -274,11 +277,13 @@ const useFundStore = create<FundState>()(
           // Create a new state object
           const newState = { ...state };
 
-          // Update global balance based on transaction type
+          // Update global balance and cost based on transaction type
           if (transaction.type === 'deposit') {
             newState.globalBalance = Math.max(0, state.globalBalance - transaction.amount);
-          } else if (transaction.type === 'withdrawal') {
+            // Don't reset globalCost when deleting deposits as it would mess up tracking
+          } else if (transaction.type === 'withdrawal' || transaction.type === 'cost') {
             newState.globalBalance = state.globalBalance + transaction.amount;
+            newState.globalCost = Math.max(0, state.globalCost - transaction.amount); // Reduce globalCost
           }
           
           // Handle different transaction types
@@ -412,7 +417,8 @@ const useFundStore = create<FundState>()(
 
         set((state) => ({
           transactions: [costTx, ...state.transactions],
-          globalBalance: Math.max(0, state.globalBalance - amount)
+          globalBalance: Math.max(0, state.globalBalance - amount),
+          globalCost: state.globalCost + amount
         }));
 
         // If a fund is specified, update its balance too
