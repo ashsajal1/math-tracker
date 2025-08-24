@@ -1,6 +1,5 @@
 import { useRouteError, isRouteErrorResponse, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ApiError } from '@/lib/api/utils/error-handler';
 import { motion } from 'framer-motion';
 import { Home, RefreshCw } from 'lucide-react';
 
@@ -11,9 +10,6 @@ export default function ErrorPage() {
 
     if (isRouteErrorResponse(error)) {
         errorMessage = error.statusText || error.data?.message || errorMessage;
-        errorStatus = error.status;
-    } else if (error instanceof ApiError) {
-        errorMessage = error.message;
         errorStatus = error.status;
     } else if (error instanceof Error) {
         errorMessage = error.message;
