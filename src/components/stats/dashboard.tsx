@@ -60,40 +60,36 @@ export default function Dashboard() {
     </Card>
   );
 
-  const MonthlyCard = ({ month, year, totalFunds, totalSpent, remaining, percentageSpent }: MonthlySummary) => (
-    <Card className="mb-4">
-      <CardHeader>
-        <CardTitle className="text-lg">{month} {year}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <div>
-            <p className="text-sm text-muted-foreground">Total Funds</p>
-            <p className="font-semibold">{formatCurrency(totalFunds)}</p>
+  const MonthlyCard = ({ month, year, totalFunds, totalSpent }: MonthlySummary) => {
+    const spendingPercentage = totalFunds > 0 ? (totalSpent / totalFunds) * 100 : 0;
+    
+    return (
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle className="text-lg">{month} {year}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Income</p>
+              <p className="font-semibold text-green-500">+{formatCurrency(totalFunds)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Expenses</p>
+              <p className="font-semibold text-red-500">-{formatCurrency(totalSpent)}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Spent</p>
-            <p className="font-semibold text-red-500">-{formatCurrency(totalSpent)}</p>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Spending vs Income</span>
+              <span>{Math.round(spendingPercentage)}%</span>
+            </div>
+            <Progress value={spendingPercentage} className="h-2" />
           </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Remaining</p>
-            <p className={`font-semibold ${
-              remaining >= 0 ? 'text-green-500' : 'text-red-500'
-            }`}>
-              {formatCurrency(remaining)}
-            </p>
-          </div>
-        </div>
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span>Spending Progress</span>
-            <span>{Math.round(percentageSpent)}%</span>
-          </div>
-          <Progress value={percentageSpent} className="h-2" />
-        </div>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -103,9 +99,9 @@ export default function Dashboard() {
         <StatCard
           title="Global Balance"
           value={formatCurrency(globalBalance)}
-          description="Current available balance"
+          description={`${transactions.length} transactions total`}
           icon={DollarSign}
-          trend={globalBalance > 0 ? "up" : "down"}
+          trend={globalBalance > 0 ? "up" : "neutral"}
         />
       </div>
 
