@@ -1,15 +1,13 @@
-import { CostData } from "../store/costStore";
-
 // Define the FundTransaction type here to avoid circular dependencies
+type CategoryType = "Household" | "Transport" | "Food" | "Entertainment" | "Education" | "Health" | "Other";
+
 type FundTransaction = {
   id: string;
-  fundId: string;
+  type: 'deposit' | 'withdrawal' | 'cost';
   amount: number;
-  type: 'deposit' | 'withdrawal' | 'transfer' | 'cost';
-  date: string;
+  category?: CategoryType;
   note?: string;
-  relatedTransactionId?: string;
-  category?: string;
+  date: string;
 };
 
 export interface FundSummary {
@@ -17,13 +15,6 @@ export interface FundSummary {
   totalSpent: number;
   remaining: number;
   percentageSpent: number;
-}
-
-export interface CostSummary {
-  totalCost: number;
-  costByReason: Record<string, number>;
-  highestCostReason: string;
-  averageCost: number;
 }
 
 export interface MonthlySummary extends FundSummary {
@@ -51,9 +42,6 @@ export const calculateFundSummary = (transactions: FundTransaction[]): FundSumma
     if (transaction.type === 'deposit') {
       summary.totalFunds += transaction.amount;
     } else if (transaction.type === 'withdrawal' || transaction.type === 'cost') {
-      summary.totalSpent += transaction.amount;
-      summary.totalFunds += transaction.amount;
-    } else if (['withdrawal', 'transfer'].includes(transaction.type)) {
       summary.totalSpent += transaction.amount;
     }
   });
@@ -88,7 +76,7 @@ export const calculateMonthlySummary = (transactions: FundTransaction[]): Monthl
     
     if (transaction.type === 'deposit') {
       monthlyData[key].totalFunds += transaction.amount;
-    } else if (['withdrawal', 'transfer'].includes(transaction.type)) {
+    } else if (transaction.type === 'withdrawal' || transaction.type === 'cost') {
       monthlyData[key].totalSpent += transaction.amount;
     }
     
@@ -112,75 +100,4 @@ export const getFundsByRange = (transactions: FundTransaction[], startDate: Date
   });
   
   return calculateFundSummary(filteredTransactions);
-};
-
-// New cost calculation functions
-export const calculateCostSummary = (costs: CostData[]): CostSummary => {
-  const costByReason: Record<string, number> = {};
-  let totalCost = 0;
-
-  costs.forEach(cost => {
-    costByReason[cost.reason] = (costByReason[cost.reason] || 0) + cost.cost;
-    totalCost += cost.cost;
-  });
-
-  const highestCostReason = Object.entries(costByReason)
-    .sort(([, a], [, b]) => b - a)[0]?.[0] || '';
-
-  return {
-    totalCost,
-    costByReason,
-    highestCostReason,
-    averageCost: costs.length ? totalCost / costs.length : 0,
-  };
-};
-
-export const calculateMonthlyCostSummary = (costs: CostData[]): MonthlyCostSummary[] => {
-  const monthlyData: Record<string, MonthlyCostSummary> = {};
-  
-  costs.forEach(cost => {
-    const date = new Date(cost.date);
-    const month = date.toLocaleString('default', { month: 'short' });
-    const year = date.getFullYear();
-    const key = `${year}-${date.getMonth()}`;
-    
-    if (!monthlyData[key]) {
-      monthlyData[key] = {
-        month,
-        year,
-        totalCost: 0,
-        costByReason: {},
-        averageCost: 0,
-      };
-    }
-    
-    monthlyData[key].totalCost += cost.cost;
-    monthlyData[key].costByReason[cost.reason] = 
-      (monthlyData[key].costByReason[cost.reason] || 0) + cost.cost;
-  });
-  
-  // Calculate averages and sort by date
-  const summaries = Object.values(monthlyData);
-  summaries.forEach(summary => {
-    const monthCosts = costs.filter(cost => {
-      const date = new Date(cost.date);
-      return date.toLocaleString('default', { month: 'short' }) === summary.month 
-        && date.getFullYear() === summary.year;
-    });
-    summary.averageCost = monthCosts.length ? summary.totalCost / monthCosts.length : 0;
-  });
-  
-  return summaries.sort((a, b) => {
-    if (a.year !== b.year) return b.year - a.year;
-    return b.month.localeCompare(a.month);
-  });
-};
-
-export const getCostsByRange = (costs: CostData[], startDate: Date, endDate: Date): CostSummary => {
-  const filteredCosts = costs.filter(cost => {
-    const costDate = new Date(cost.date);
-    return costDate >= startDate && costDate <= endDate;
-  });
-  
-  return calculateCostSummary(filteredCosts);
 };
