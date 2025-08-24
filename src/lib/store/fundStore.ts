@@ -27,12 +27,17 @@ interface FundState {
   funds: Record<string, Fund>; // key is fund ID
   transactions: FundTransaction[];
   activeFundId: string | null;
+  globalBalance: number; // New global balance state
   
   // Fund Management
   createFund: (name: string, initialBalance?: number, description?: string, category?: string) => string;
   updateFund: (id: string, updates: Partial<Omit<Fund, 'id' | 'balance' | 'createdAt'>>) => void;
   deleteFund: (id: string) => void;
   setActiveFund: (id: string) => void;
+  
+  // Global Balance Management
+  increaseGlobalBalance: (amount: number) => void;
+  decreaseGlobalBalance: (amount: number) => void;
   
   // Transactions
   deposit: (amount: number, note?: string, fundId?: string) => string | undefined;
@@ -56,6 +61,22 @@ const useFundStore = create<FundState>()(
       funds: {},
       transactions: [],
       activeFundId: null,
+      globalBalance: 0,
+
+      // Global Balance Management
+      increaseGlobalBalance: (amount: number) => {
+        set((state) => ({
+          ...state,
+          globalBalance: state.globalBalance + amount
+        }));
+      },
+
+      decreaseGlobalBalance: (amount: number) => {
+        set((state) => ({
+          ...state,
+          globalBalance: Math.max(0, state.globalBalance - amount)
+        }));
+      },
 
       // Fund Management
       createFund: (name, initialBalance = 0, description = '', category = 'General') => {
@@ -126,11 +147,11 @@ const useFundStore = create<FundState>()(
       },
 
       // Transactions
-  deposit: (amount, note = 'Deposit', fundId) => {
+      deposit: (amount, note = 'Deposit', fundId) => {
         const targetFundId = fundId || get().activeFundId;
         if (!targetFundId || amount <= 0) return;
         
-  const depositTx: FundTransaction = {
+        const depositTx: FundTransaction = {
           id: uuidv4(),
           fundId: targetFundId,
           amount,
@@ -148,12 +169,11 @@ const useFundStore = create<FundState>()(
             },
           },
           transactions: [depositTx, ...state.transactions],
+          globalBalance: state.globalBalance + amount
         }));
 
         return depositTx.id;
-      },
-
-      withdraw: (amount, note = 'Withdrawal', fundId) => {
+      },      withdraw: (amount, note = 'Withdrawal', fundId) => {
         const targetFundId = fundId || get().activeFundId;
         if (!targetFundId || amount <= 0) return;
         
@@ -178,6 +198,7 @@ const useFundStore = create<FundState>()(
             },
           },
           transactions: [withdrawTx, ...state.transactions],
+          globalBalance: Math.max(0, state.globalBalance - amount)
         }));
 
         return withdrawTx.id;
@@ -218,6 +239,7 @@ const useFundStore = create<FundState>()(
           transferTo: sourceFundId,
         };
 
+        // Note: Transfers don't affect global balance since money stays in the system
         set((state) => ({
           funds: {
             ...state.funds,
@@ -243,6 +265,13 @@ const useFundStore = create<FundState>()(
 
           // Create a new state object
           const newState = { ...state };
+
+          // Update global balance based on transaction type
+          if (transaction.type === 'deposit') {
+            newState.globalBalance = Math.max(0, state.globalBalance - transaction.amount);
+          } else if (transaction.type === 'withdrawal') {
+            newState.globalBalance = state.globalBalance + transaction.amount;
+          }
           
           // Handle different transaction types
           if (transaction.type === 'transfer') {
