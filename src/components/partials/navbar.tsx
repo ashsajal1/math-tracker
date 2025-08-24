@@ -59,7 +59,7 @@ export default function Navbar() {
           >
             <div className="flex items-center gap-2">
               <Logo className="h-8 w-auto text-black dark:text-white" />
-              <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">
                 Math Tracker
               </h1>
             </div>
