@@ -6,10 +6,12 @@ export interface FundTransaction {
   id: string;
   fundId: string;  // Reference to the fund
   amount: number;
-  type: 'deposit' | 'withdrawal' | 'transfer';
+  type: 'deposit' | 'withdrawal' | 'transfer' | 'cost';
   date: string;
   note: string;
   transferTo?: string; // For transfer transactions
+  category?: string;  // For cost transactions
+  description?: string; // For cost transactions
 }
 
 export interface Fund {
@@ -28,6 +30,12 @@ interface FundState {
   transactions: FundTransaction[];
   activeFundId: string | null;
   globalBalance: number; // New global balance state
+  
+  // Cost Management
+  addCost: (amount: number, category: string, note?: string, fundId?: string) => string;
+  getTransactionsByCategory: (category: string) => FundTransaction[];
+  getCostTransactions: () => FundTransaction[];
+  getTotalCostsByCategory: () => Record<string, number>;
   
   // Fund Management
   createFund: (name: string, initialBalance?: number, description?: string, category?: string) => string;
@@ -386,6 +394,61 @@ const useFundStore = create<FundState>()(
       getActiveFund: () => {
         const { activeFundId, funds } = get();
         return activeFundId ? funds[activeFundId] : null;
+      },
+
+      // Cost Management Functions
+      addCost: (amount, category, note = '', fundId) => {
+        if (amount <= 0) return '';
+        
+        const costTx: FundTransaction = {
+          id: uuidv4(),
+          fundId: fundId || get().activeFundId || '',
+          amount,
+          type: 'cost',
+          category,
+          date: new Date().toISOString(),
+          note,
+        };
+
+        set((state) => ({
+          transactions: [costTx, ...state.transactions],
+          globalBalance: Math.max(0, state.globalBalance - amount)
+        }));
+
+        // If a fund is specified, update its balance too
+        if (fundId) {
+          set((state) => ({
+            funds: {
+              ...state.funds,
+              [fundId]: {
+                ...state.funds[fundId],
+                balance: Math.max(0, (state.funds[fundId]?.balance || 0) - amount),
+              },
+            },
+          }));
+        }
+
+        return costTx.id;
+      },
+
+      getTransactionsByCategory: (category) => {
+        return get().transactions.filter(
+          tx => tx.type === 'cost' && tx.category === category
+        );
+      },
+
+      getCostTransactions: () => {
+        return get().transactions.filter(tx => tx.type === 'cost');
+      },
+
+      getTotalCostsByCategory: () => {
+        return get().transactions
+          .filter(tx => tx.type === 'cost')
+          .reduce((acc, tx) => {
+            const category = tx.category || 'Other';
+            acc[category] = (acc[category] || 0) + tx.amount;
+            return acc;
+          }, {} as Record<string, number>);
       },
     }),
     {

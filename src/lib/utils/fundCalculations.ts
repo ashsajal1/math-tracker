@@ -5,10 +5,11 @@ type FundTransaction = {
   id: string;
   fundId: string;
   amount: number;
-  type: 'deposit' | 'withdrawal' | 'transfer';
+  type: 'deposit' | 'withdrawal' | 'transfer' | 'cost';
   date: string;
   note?: string;
   relatedTransactionId?: string;
+  category?: string;
 };
 
 export interface FundSummary {
@@ -48,6 +49,9 @@ export const calculateFundSummary = (transactions: FundTransaction[]): FundSumma
 
   transactions.forEach(transaction => {
     if (transaction.type === 'deposit') {
+      summary.totalFunds += transaction.amount;
+    } else if (transaction.type === 'withdrawal' || transaction.type === 'cost') {
+      summary.totalSpent += transaction.amount;
       summary.totalFunds += transaction.amount;
     } else if (['withdrawal', 'transfer'].includes(transaction.type)) {
       summary.totalSpent += transaction.amount;

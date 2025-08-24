@@ -6,27 +6,41 @@ import { calculateFundSummary, calculateMonthlySummary, type MonthlySummary } fr
 import { Calendar, DollarSign, TrendingDown, TrendingUp } from 'lucide-react';
 
 const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('bn-BD', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'BDT',
+    currencyDisplay: 'narrowSymbol'
   }).format(amount);
 };
 
 export default function Dashboard() {
-  const { transactions, getTransactionsByDateRange } = useFundStore();
+  const { 
+    transactions, 
+    getTransactionsByDateRange, 
+    globalBalance,
+    getTotalCostsByCategory 
+  } = useFundStore();
+  
   const [monthlyData, setMonthlyData] = useState<MonthlySummary[]>([]);
   const [currentMonthSummary, setCurrentMonthSummary] = useState<MonthlySummary | null>(null);
+  const [costsByCategory, setCostsByCategory] = useState<Record<string, number>>({});
   const [totalSummary, setTotalSummary] = useState({
     totalFunds: 0,
     totalSpent: 0,
-    remaining: 0,
+    remaining: globalBalance,
     percentageSpent: 0,
   });
 
   useEffect(() => {
-    // Calculate total summary
+    // Calculate total summary including costs
     const summary = calculateFundSummary(transactions);
-    setTotalSummary(summary);
+    setTotalSummary({
+      ...summary,
+      remaining: globalBalance
+    });
+
+    // Update costs by category
+    setCostsByCategory(getTotalCostsByCategory());
 
     // Calculate monthly summaries
     const monthlySummaries = calculateMonthlySummary(transactions);
@@ -39,13 +53,16 @@ export default function Dashboard() {
     
     const currentMonthTransactions = getTransactionsByDateRange(firstDayOfMonth, lastDayOfMonth);
     const currentMonthSummary = calculateFundSummary(currentMonthTransactions);
+    const monthCosts = currentMonthTransactions.filter(tx => tx.type === 'cost')
+      .reduce((sum, tx) => sum + tx.amount, 0);
     
     setCurrentMonthSummary({
       ...currentMonthSummary,
+      totalSpent: monthCosts,
       month: now.toLocaleString('default', { month: 'short' }),
       year: now.getFullYear(),
     });
-  }, [transactions, getTransactionsByDateRange]);
+  }, [transactions, getTransactionsByDateRange, globalBalance, getTotalCostsByCategory]);
 
   const StatCard = ({ title, value, description, icon: Icon, trend }: { 
     title: string; 
@@ -113,11 +130,11 @@ export default function Dashboard() {
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Total Funds"
-          value={formatCurrency(totalSummary.totalFunds)}
-          description="All-time total funds"
+          title="Global Balance"
+          value={formatCurrency(globalBalance)}
+          description="Current available balance"
           icon={DollarSign}
-          trend="up"
+          trend={globalBalance > 0 ? "up" : "down"}
         />
         <StatCard
           title="Total Spent"
@@ -155,7 +172,34 @@ export default function Dashboard() {
         </div>
         
         <div>
-          <h3 className="text-lg font-semibold mb-4">Current Month</h3>
+          <h3 className="text-lg font-semibold mb-4">Cost Categories</h3>
+          {Object.entries(costsByCategory).length > 0 ? (
+            <Card className="mb-4">
+              <CardHeader>
+                <CardTitle className="text-lg">Cost Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {Object.entries(costsByCategory).map(([category, amount]) => (
+                    <div key={category} className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>{category}</span>
+                        <span>{formatCurrency(amount)}</span>
+                      </div>
+                      <Progress 
+                        value={totalSummary.totalSpent ? (amount / totalSummary.totalSpent) * 100 : 0} 
+                        className="h-2" 
+                      />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <p className="text-muted-foreground">No cost data available</p>
+          )}
+
+          <h3 className="text-lg font-semibold mb-4 mt-6">Current Month</h3>
           {currentMonthSummary ? (
             <MonthlyCard {...currentMonthSummary} />
           ) : (
