@@ -9,7 +9,7 @@ const PAGE_SIZE = 5;
 
 export default function HistoryList() {
   const { costData, removeCost } = useCostStore();
-  const { deposit } = useFundStore();
+  const { increaseGlobalBalance } = useFundStore();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const sorted = useMemo(() => {
@@ -22,11 +22,9 @@ export default function HistoryList() {
   const handleRemove = (id: string) => {
     if (confirm('Are you sure you want to remove this entry?')) {
       const costToRemove = costData.find(c => c.id === id);
-      if (costToRemove?.fundId) {
-        // Refund the amount to the fund
-        deposit(costToRemove.cost, 
-          `Refund for deleted cost: ${costToRemove.reason}`, 
-          costToRemove.fundId);
+      if (costToRemove) {
+        // Increase global balance when refunding cost
+        increaseGlobalBalance(costToRemove.cost);
       }
       removeCost(id);
     }
