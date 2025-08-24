@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useCostStore } from "@/lib/store/costStore";
 import useFundStore from "@/lib/store/fundStore";
 import {
   Select,
@@ -24,8 +23,7 @@ type ReasonType =
   | "Other";
 
 export default function CreateWork() {
-  const { addCost } = useCostStore();
-  const { funds, activeFundId, decreaseGlobalBalance } = useFundStore();
+  const { funds, activeFundId, addCost } = useFundStore();
 
   const [cost, setCost] = useState<number>(0);
   const [reason, setReason] = useState<ReasonType>("Household");
@@ -51,21 +49,10 @@ export default function CreateWork() {
         alert('Insufficient funds in the selected account');
         return;
       }
-      
-      // Decrease global balance when creating a cost
-      decreaseGlobalBalance(cost);
     }
 
-    // Create the cost data object
-    const costData = {
-      cost,
-      reason,
-      note: note || undefined, // Only include note if it's not empty
-      fundId: selectedFundId, // Use the selected fund ID
-    };
-
-    // Add the cost data
-    addCost(costData);
+    // Add the cost transaction using fundStore
+    addCost(cost, reason, note || undefined, selectedFundId);
 
     // Reset form
     setCost(0);

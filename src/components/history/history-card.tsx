@@ -2,10 +2,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import type { CostData } from "@/lib/store/costStore";
+import type { FundTransaction } from "@/lib/store/fundStore";
 
 type HistoryCardProps = {
-  problem: CostData;
+  problem: FundTransaction;
   onRemove?: (id: string) => void;
 };
 
@@ -21,7 +21,7 @@ export default function HistoryCard({ problem, onRemove }: HistoryCardProps) {
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 flex-wrap">
             <Badge variant="secondary" className="text-xs">
-              {problem.reason}
+              {problem.category || problem.type}
             </Badge>
             {problem.note && (
               <span className="text-sm font-medium text-foreground">
@@ -35,7 +35,13 @@ export default function HistoryCard({ problem, onRemove }: HistoryCardProps) {
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <Badge className="text-xs px-2 py-1">${problem.cost.toFixed(2)}</Badge>
+        <Badge className={`text-xs px-2 py-1 ${
+          problem.type === 'withdrawal' || problem.type === 'cost' ? 'bg-red-500' : 
+          problem.type === 'deposit' ? 'bg-green-500' : 'bg-blue-500'
+        }`}>
+          {problem.type === 'withdrawal' || problem.type === 'cost' ? '-' : '+'}
+          ৳{problem.amount.toFixed(2)}
+        </Badge>
         {onRemove && (
           <Button
             size="icon"
