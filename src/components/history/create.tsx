@@ -25,7 +25,7 @@ type ReasonType =
 
 export default function CreateWork() {
   const { addCost } = useCostStore();
-  const { funds, activeFundId, withdraw } = useFundStore();
+  const { funds, activeFundId, decreaseGlobalBalance } = useFundStore();
 
   const [cost, setCost] = useState<number>(0);
   const [reason, setReason] = useState<ReasonType>("Household");
@@ -52,8 +52,8 @@ export default function CreateWork() {
         return;
       }
       
-      // Withdraw from the fund
-      withdraw(cost, `Cost: ${reason}${note ? ` - ${note}` : ''}`, selectedFundId);
+      // Decrease global balance when creating a cost
+      decreaseGlobalBalance(cost);
     }
 
     // Create the cost data object
