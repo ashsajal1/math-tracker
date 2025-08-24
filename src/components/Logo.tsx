@@ -10,9 +10,10 @@ export default function Logo({ className = '' }: { className?: string }) {
     >
       <defs>
         <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#9333ea" />
-          <stop offset="100%" stopColor="#4f46e5" />
+          <stop offset="0%" stopColor="#22c55e" />
+          <stop offset="100%" stopColor="#10b981" />
         </linearGradient>
+        
       </defs>
       
       {/* Main M Symbol */}
