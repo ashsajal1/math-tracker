@@ -3,6 +3,9 @@ import Home from './pages/home';
 import RootLayout from './pages/Layout';
 import NotFound from './pages/not-found';
 import ErrorPage from './pages/error';
+import Stats from './pages/stats';
+import Settings from './pages/settings';
+import Profile from './pages/profile';
 
 export const router = createBrowserRouter([
     {
@@ -15,9 +18,21 @@ export const router = createBrowserRouter([
                 element: <Home />
             },
             {
+                path:'/profile',
+                element: <Profile />
+            },
+            {
+                path:'/settings',
+                element: <Settings />
+            },
+            {
+                path:'/stats',
+                element: <Stats />
+            },
+            {
                 path:'*',
                 element: <NotFound />
-            }
+            },
         ]
     }
 ])
