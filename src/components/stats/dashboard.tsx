@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import useFundStore, { type FundTransaction } from '@/lib/store/fundStore';
 import type { FundTransaction as UtilFundTransaction, CategoryType } from '@/lib/utils/fundCalculations';
-import { calculateFundSummary, calculateMonthlySummary, type MonthlySummary } from '@/lib/utils/fundCalculations';
-import { Calendar, DollarSign, TrendingDown, TrendingUp } from 'lucide-react';
+import { calculateMonthlySummary, type MonthlySummary } from '@/lib/utils/fundCalculations';
+import { DollarSign } from 'lucide-react';
 
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('bn-BD', {
@@ -15,20 +15,9 @@ const formatCurrency = (amount: number): string => {
 };
 
 export default function Dashboard() {
-  const { 
-    transactions, 
-    getTransactionsByDateRange, 
-    globalBalance
-  } = useFundStore();
+  const { transactions, globalBalance } = useFundStore();
   
   const [monthlyData, setMonthlyData] = useState<MonthlySummary[]>([]);
-  const [currentMonthSummary, setCurrentMonthSummary] = useState<MonthlySummary | null>(null);
-  const [totalSummary, setTotalSummary] = useState({
-    totalFunds: 0,
-    totalSpent: 0,
-    remaining: globalBalance,
-    percentageSpent: 0,
-  });
 
   useEffect(() => {
     // Transform transactions to match utility function expectations
@@ -41,31 +30,10 @@ export default function Dashboard() {
       category: tx.category as CategoryType | undefined
     }));
 
-    // Calculate total summary including costs
-    const totalSummaryData = calculateFundSummary(transformTransactions(transactions));
-    setTotalSummary({
-      ...totalSummaryData,
-      remaining: globalBalance
-    });
-
     // Calculate monthly summaries
     const monthlySummaries = calculateMonthlySummary(transformTransactions(transactions));
     setMonthlyData(monthlySummaries);
-
-    // Calculate current month summary
-    const now = new Date();
-    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    
-    const currentMonthTransactions = getTransactionsByDateRange(firstDayOfMonth, lastDayOfMonth);
-    const currentMonthSummaryData = calculateFundSummary(transformTransactions(currentMonthTransactions));
-    
-    setCurrentMonthSummary({
-      ...currentMonthSummaryData,
-      month: now.toLocaleString('default', { month: 'short' }),
-      year: now.getFullYear(),
-    });
-  }, [transactions, getTransactionsByDateRange, globalBalance]);
+  }, [transactions]);
 
   const StatCard = ({ title, value, description, icon: Icon, trend }: { 
     title: string; 
@@ -131,7 +99,7 @@ export default function Dashboard() {
     <div className="container mx-auto p-4 space-y-6">
       <h2 className="text-2xl font-bold tracking-tight">Funds Overview</h2>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6">
         <StatCard
           title="Global Balance"
           value={formatCurrency(globalBalance)}
@@ -139,49 +107,17 @@ export default function Dashboard() {
           icon={DollarSign}
           trend={globalBalance > 0 ? "up" : "down"}
         />
-        <StatCard
-          title="Total Spent"
-          value={formatCurrency(totalSummary.totalSpent)}
-          description="All-time spending"
-          icon={TrendingDown}
-          trend="down"
-        />
-        <StatCard
-          title="Remaining"
-          value={formatCurrency(totalSummary.remaining)}
-          description="Available balance"
-          icon={TrendingUp}
-          trend={totalSummary.remaining >= 0 ? 'up' : 'down'}
-        />
-        <StatCard
-          title="Spent This Month"
-          value={currentMonthSummary ? formatCurrency(currentMonthSummary.totalSpent) : formatCurrency(0)}
-          description={`${currentMonthSummary?.month || ''} ${currentMonthSummary?.year || ''}`}
-          icon={Calendar}
-          trend="down"
-        />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Monthly Breakdown</h3>
-          {monthlyData.length > 0 ? (
-            monthlyData.map((data) => (
-              <MonthlyCard key={`${data.month}-${data.year}`} {...data} />
-            ))
-          ) : (
-            <p className="text-muted-foreground">No monthly data available</p>
-          )}
-        </div>
-        
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Current Month</h3>
-          {currentMonthSummary ? (
-            <MonthlyCard {...currentMonthSummary} />
-          ) : (
-            <p className="text-muted-foreground">No data for current month</p>
-          )}
-        </div>
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Monthly Breakdown</h3>
+        {monthlyData.length > 0 ? (
+          monthlyData.map((data) => (
+            <MonthlyCard key={`${data.month}-${data.year}`} {...data} />
+          ))
+        ) : (
+          <p className="text-muted-foreground">No monthly data available</p>
+        )}
       </div>
     </div>
   );
