@@ -31,6 +31,7 @@ interface FundState {
   activeFundId: string | null;
   globalBalance: number; // New global balance state
   globalCost: number;
+  debtBalance: number; // Track total debt
 
   // Cost Management
   addCost: (
@@ -98,6 +99,7 @@ const useFundStore = create<FundState>()(
       activeFundId: null,
       globalBalance: 0,
       globalCost: 0,
+      debtBalance: 0,
 
       // Fund Management
       createFund: (
@@ -251,50 +253,98 @@ const useFundStore = create<FundState>()(
         const sourceFund = get().funds[sourceFundId];
         const targetFund = get().funds[toFundId];
 
-        if (!sourceFund || !targetFund || amount > sourceFund.balance) return;
-
-        const baseTransactionId = uuidv4();
-        const timestamp = new Date().toISOString();
-
-        // Create withdrawal from source
-        const withdrawal: FundTransaction = {
-          id: `${baseTransactionId}-from`,
-          fundId: sourceFundId,
-          amount,
-          type: "transfer",
-          date: timestamp,
-          note: `Transfer to ${targetFund.name}`,
-          transferTo: toFundId,
-        };
-
-        // Create deposit to target
-        const depositTx: FundTransaction = {
-          id: `${baseTransactionId}-to`,
-          fundId: toFundId,
-          amount,
-          type: "transfer",
-          date: timestamp,
-          note: `Transfer from ${sourceFund.name}`,
-          transferTo: sourceFundId,
-        };
-
-        // Note: Transfers don't affect global balance since money stays in the system
-        set((state) => ({
-          funds: {
-            ...state.funds,
-            [sourceFundId]: {
-              ...sourceFund,
-              balance: sourceFund.balance - amount,
+        if (!sourceFund || !targetFund || amount > sourceFund.balance) {
+          // Handle insufficient funds by using debt
+          const debtAmount = amount - sourceFund.balance;
+          
+          // Update source fund to zero and create debt
+          set((state) => ({
+            funds: {
+              ...state.funds,
+              [sourceFundId]: {
+                ...sourceFund,
+                balance: 0,
+              },
+              [toFundId]: {
+                ...targetFund,
+                balance: targetFund.balance + sourceFund.balance,
+              },
             },
-            [toFundId]: {
-              ...targetFund,
-              balance: targetFund.balance + amount,
-            },
-          },
-          transactions: [withdrawal, depositTx, ...state.transactions],
-        }));
+            debtBalance: state.debtBalance + debtAmount,
+            transactions: [
+              {
+                id: uuidv4(),
+                fundId: sourceFundId,
+                amount: sourceFund.balance,
+                type: "withdrawal",
+                date: new Date().toISOString(),
+                note: `Partial transfer to ${targetFund.name} (Insufficient funds, created ৳${debtAmount} debt)`
+              },
+              {
+                id: uuidv4(),
+                fundId: toFundId,
+                amount: sourceFund.balance,
+                type: "deposit",
+                date: new Date().toISOString(),
+                note: `Partial transfer from ${sourceFund.name} (Insufficient funds)`
+              },
+              {
+                id: uuidv4(),
+                fundId: sourceFundId,
+                amount: debtAmount,
+                type: "withdrawal",
+                date: new Date().toISOString(),
+                note: `Debt created for transfer to ${targetFund.name}`,
+                transferTo: toFundId,
+              },
+              ...state.transactions
+            ],
+          }));
+        } else {
+          // Normal transfer when sufficient funds
+          const baseTransactionId = uuidv4();
+          const timestamp = new Date().toISOString();
 
-        return { fromId: withdrawal.id, toId: depositTx.id };
+          // Create withdrawal from source
+          const withdrawal: FundTransaction = {
+            id: `${baseTransactionId}-from`,
+            fundId: sourceFundId,
+            amount,
+            type: "transfer",
+            date: timestamp,
+            note: `Transfer to ${targetFund.name}`,
+            transferTo: toFundId,
+          };
+
+          // Create deposit to target
+          const depositTx: FundTransaction = {
+            id: `${baseTransactionId}-to`,
+            fundId: toFundId,
+            amount,
+            type: "transfer",
+            date: timestamp,
+            note: `Transfer from ${sourceFund.name}`,
+            transferTo: sourceFundId,
+          };
+
+          // Note: Transfers don't affect global balance since money stays in the system
+          set((state) => ({
+            funds: {
+              ...state.funds,
+              [sourceFundId]: {
+                ...sourceFund,
+                balance: sourceFund.balance - amount,
+              },
+              [toFundId]: {
+                ...targetFund,
+                balance: targetFund.balance + amount,
+              },
+            },
+            transactions: [withdrawal, depositTx, ...state.transactions],
+          }));
+        }
+
+        return { fromId: uuidv4(), toId: uuidv4() };
       },
 
       deleteTransaction: (id) => {
