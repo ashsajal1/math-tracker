@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import useFundStore, { type FundTransaction } from '@/lib/store/fundStore';
+import useFundStore from '@/lib/store/fundStore';
 import type { FundTransaction as UtilFundTransaction, CategoryType } from '@/lib/utils/fundCalculations';
 import { calculateMonthlySummary, type MonthlySummary } from '@/lib/utils/fundCalculations';
 import { DollarSign } from 'lucide-react';
+import { FundTransaction } from '@/lib/store/types';
 
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('bn-BD', {
