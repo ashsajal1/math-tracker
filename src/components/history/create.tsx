@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import useFundStore from "@/lib/store/fundStore";
+import { AlertCircle } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -37,28 +38,25 @@ export default function CreateWork() {
 
   const [date, setDate] = useState<string>(defaultDate);
 
-  const canSubmit = Boolean(cost > 0 && reason);
+  const canSubmit = Boolean(cost > 0 && reason && (selectedFundId || selectedFundId === 'debt'));
 
   const handleCreate = () => {
     if (!canSubmit) return;
 
-    // Check fund balance if a fund is selected
-    if (selectedFundId) {
-      const selectedFund = funds[selectedFundId];
-      if (!selectedFund || selectedFund.balance < cost) {
-        alert('Insufficient funds in the selected account');
-        return;
-      }
+    if (selectedFundId === 'debt') {
+      // Use the addCost function with a special debt fund ID
+      addCost(cost, reason, note || `Debt expense: ${reason}`, 'debt');
+    } else if (selectedFundId) {
+      // For regular funds, use the existing addCost function
+      addCost(cost, reason, note || undefined, selectedFundId);
     }
-
-    // Add the cost transaction using fundStore
-    addCost(cost, reason, note || undefined, selectedFundId);
 
     // Reset form
     setCost(0);
     setReason("Household");
     setNote("");
     setDate(defaultDate);
+    setSelectedFundId(undefined);
   };
 
   return (
@@ -111,16 +109,22 @@ export default function CreateWork() {
 
         
         <div className="space-y-2">
-          <Label>Fund (Optional)</Label>
+          <Label>Select Fund <span className="text-red-500">*</span></Label>
           <Select
-            value={selectedFundId || 'no-fund'}
-            onValueChange={(value) => setSelectedFundId(value === 'no-fund' ? undefined : value)}
+            value={selectedFundId}
+            onValueChange={setSelectedFundId}
+            required
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select a fund (optional)" />
+              <SelectValue placeholder="Select a fund" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="no-fund">No fund</SelectItem>
+              <SelectItem value="debt" className="font-semibold text-amber-600">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>Debt Fund (Add to Debt)</span>
+                </div>
+              </SelectItem>
               {Object.values(funds).map((fund) => (
                 <SelectItem key={fund.id} value={fund.id}>
                   {fund.name} (৳{fund.balance})
@@ -128,6 +132,17 @@ export default function CreateWork() {
               ))}
             </SelectContent>
           </Select>
+          <p className="text-sm text-muted-foreground">
+            {selectedFundId === 'debt' ? (
+              <span className="text-amber-500 font-medium">
+                This will add {cost}৳ to your debt balance.
+              </span>
+            ) : selectedFundId && funds[selectedFundId]?.balance < cost ? (
+              <span className="text-amber-500">
+                Insufficient funds. {cost - funds[selectedFundId].balance}৳ will be added to debt.
+              </span>
+            ) : null}
+          </p>
         </div>
 
         <div className="space-y-2">
