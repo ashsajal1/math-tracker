@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import type { FundTransaction } from "@/lib/store/fundStore";
+import type { FundTransaction } from "@/lib/store/types";
 
 type HistoryCardProps = {
   problem: FundTransaction;
