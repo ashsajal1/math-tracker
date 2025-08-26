@@ -86,3 +86,25 @@ export interface FundState {
   getFundsByCategory: (category: string) => Fund[];
   getActiveFund: () => Fund | null;
 }
+
+
+export interface TransactionState {
+    transactions: FundTransaction[];
+    globalBalance: number;
+    globalCost: number;
+    debtBalance: number;
+    
+    // Actions
+    addTransaction: (transaction: Omit<FundTransaction, 'id' | 'date'>) => string;
+    deleteTransaction: (id: string) => void;
+    getTransactionsByFund: (fundId: string) => FundTransaction[];
+    getTransactionsByDateRange: (
+      startDate: Date,
+      endDate: Date,
+      fundId?: string
+    ) => FundTransaction[];
+    getTransactionsByCategory: (category: string) => FundTransaction[];
+    getCostTransactions: () => FundTransaction[];
+    getTotalCostsByCategory: () => Record<string, number>;
+    clearAllTransactions: () => void;
+  }
