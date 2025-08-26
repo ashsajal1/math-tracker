@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bell, Moon, Sun, Palette, Cloud, Shield } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Moon, Sun, Palette, Cloud, Shield, Bell } from "lucide-react";
+import { NotificationSettings } from "@/components/settings/NotificationSettings";
 
 export default function Settings() {
   return (
@@ -71,24 +72,7 @@ export default function Settings() {
               <p className="text-sm text-muted-foreground">Manage your notification preferences</p>
             </div>
           </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Daily Reminders</Label>
-                <p className="text-sm text-muted-foreground">Get reminded to practice daily</p>
-              </div>
-              <Switch />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Achievement Alerts</Label>
-                <p className="text-sm text-muted-foreground">Get notified when you reach milestones</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-          </div>
+          <NotificationSettings />
         </div>
       </Card>
 
