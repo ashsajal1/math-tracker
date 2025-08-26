@@ -67,9 +67,30 @@ const scheduleDailyNotification = async (time: { hour: number; minute: number },
 
   const timeUntilNotification = scheduledTime.getTime() - now.getTime();
 
-  // Schedule the notification
+  // Motivational quotes for study encouragement
+  const motivationalQuotes = [
+    "Consistency is the key to mastery! Keep your math streak going! 🔥",
+    "Every problem you solve makes you better. Let's do some math! 💪",
+    "Your future self will thank you for studying today. Keep going! 🚀",
+    "Math is not about numbers, equations, or algorithms. It's about understanding. - William Paul Thurston",
+    "The only way to learn mathematics is to do mathematics. - Paul Halmos",
+    "Don't watch the clock; do what it does. Keep going! ⏰",
+    "Small progress is still progress. Keep building your math skills! 📈",
+    "The expert in anything was once a beginner. Keep practicing! 🌟",
+    "Your daily math practice is an investment in your future self. 💡",
+    "Mathematics is the most beautiful and powerful creation of the human spirit. - Stefan Banach"
+  ];
+
+  // Get a random quote
+  const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+  
+  // Schedule the notification with the motivational message
   setTimeout(() => {
-    showNotification(title, options);
+    showNotification("Time for Math Practice! ✨", {
+      ...options,
+      body: randomQuote,
+      requireInteraction: true
+    });
     
     // Schedule the next day's notification
     scheduleDailyNotification(time, title, options);
