@@ -20,7 +20,7 @@ export default function CreateWork() {
   const { getTopics } = topicStore();
 
   const topics = getTopics();
-  const subjects = topics.map((t) => t.subject);
+  const subjects = Array.from(new Set(topics.map((t) => t.subject)));
 
   const [subject, setSubject] = useState<string>("Mathematics");
   const topicsForSubject = useMemo(
@@ -108,7 +108,12 @@ export default function CreateWork() {
 
       <div className="flex gap-2 justify-end">
         <CreateTopicDialog />
-        <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleCreate} disabled={!canSubmit}>
+        <Button
+          size="sm"
+          className="h-8 gap-1.5 text-xs"
+          onClick={handleCreate}
+          disabled={!canSubmit}
+        >
           Add Work
         </Button>
       </div>
