@@ -11,7 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useMathStore, MathProblemType } from "@/lib/store";
-import { topicStore } from '../../lib/store/topicStore';
+import { topicStore } from "../../lib/store/topicStore";
+import CreateTopicDialog from "../create-topic-dialog";
 
 export default function CreateWork() {
   const { addProblem } = useMathStore();
@@ -80,6 +81,7 @@ export default function CreateWork() {
 
         <div className="space-y-2">
           <Label>Topic</Label>
+
           <Select value={topic} onValueChange={setTopic}>
             <SelectTrigger>
               <SelectValue placeholder="Select topic" />
@@ -104,8 +106,9 @@ export default function CreateWork() {
         </div>
       </div>
 
-      <div className="flex justify-end">
-        <Button onClick={handleCreate} disabled={!canSubmit}>
+      <div className="flex gap-2 justify-end">
+        <CreateTopicDialog />
+        <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleCreate} disabled={!canSubmit}>
           Add Work
         </Button>
       </div>
