@@ -12,6 +12,7 @@ import {
 import { PlusCircle, BookOpen, BookMarked, AlertCircle } from "lucide-react";
 import { Label } from "./ui/label";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+import { capitalize } from "@/lib/utils";
 
 export default function CreateTopicDialog() {
   const { addTopic, topics } = topicStore();
@@ -146,7 +147,7 @@ export default function CreateTopicDialog() {
                   {allSubjects.length > 0 ? (
                     allSubjects.map((s) => (
                       <SelectItem key={s} value={s}>
-                        {s}
+                        {capitalize(s)}
                       </SelectItem>
                     ))
                   ) : (

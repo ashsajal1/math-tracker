@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { PlusCircle, BookOpen, BookMarked, AlertCircle } from "lucide-react";
 import { Label } from "./ui/label";
 import { Card } from "./ui/card";
+import { capitalize } from "@/lib/utils";
 
 export default function CreateTopic() {
   const { addTopic, topics } = topicStore();
@@ -125,7 +126,7 @@ export default function CreateTopic() {
                 {allSubjects.length > 0 ? (
                   allSubjects.map((s) => (
                     <SelectItem key={s} value={s}>
-                      {s}
+                      {capitalize(s)}
                     </SelectItem>
                   ))
                 ) : (
