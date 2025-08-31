@@ -11,7 +11,7 @@ interface Topic {
 
 interface TopicStore {
   topics: Topic[];
-  addTopic: (topic: string) => void;
+  addTopic: (subject: string, topic: string) => void;
   removeTopic: (id: string) => void;
   updateTopic: (id: string, updates: Partial<Topic>) => void;
   getTopics: () => Topic[];
@@ -23,10 +23,10 @@ export const topicStore = create<TopicStore>()(
     (set, get) => ({
       topics: [],
 
-      addTopic: (topic) => {
+      addTopic: (subject, topic) => {
         const newTopic = {
           id: uuidv4(),
-          subject: topic,
+          subject: subject,
           topic: topic,
           cretedAt: new Date().toISOString(),
         };
