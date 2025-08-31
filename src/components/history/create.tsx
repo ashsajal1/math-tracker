@@ -22,7 +22,7 @@ export default function CreateWork() {
   const topics = getTopics();
   const subjects = Array.from(new Set(topics.map((t) => t.subject)));
 
-  const [subject, setSubject] = useState<string>("Mathematics");
+  const [subject, setSubject] = useState<string>(subjects[0]);
   const topicsForSubject = useMemo(
     () => topics.filter((t) => t.subject === subject).map((t) => t.topic),
     [topics, subject]
