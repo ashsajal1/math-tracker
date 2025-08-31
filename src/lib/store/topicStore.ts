@@ -26,8 +26,8 @@ export const topicStore = create<TopicStore>()(
       addTopic: (subject, topic) => {
         const newTopic = {
           id: uuidv4(),
-          subject: subject,
-          topic: topic,
+          subject: subject.toLocaleLowerCase(),
+          topic: topic.toLocaleLowerCase(),
           cretedAt: new Date().toISOString(),
         };
         set((state) => ({
