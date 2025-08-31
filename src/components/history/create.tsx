@@ -10,23 +10,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useMathStore, getAllProblemTypes, MathProblemType } from "@/lib/store";
+import { useMathStore, MathProblemType } from "@/lib/store";
+import { topicStore } from "../../lib/store/topicStore";
+import CreateTopicDialog from "../create-topic-dialog";
+import { capitalize } from "@/lib/utils";
 
 export default function CreateWork() {
   const { addProblem } = useMathStore();
-  const allTypes = getAllProblemTypes();
 
-  const subjects = useMemo(() => {
-    const set = new Set(allTypes.map((t) => t.subject));
-    return Array.from(set);
-  }, [allTypes]);
+  const { getTopics } = topicStore();
 
-  const [subject, setSubject] = useState<string>("Mathematics");
+  const topics = getTopics();
+  const subjects = Array.from(new Set(topics.map((t) => t.subject)));
+
+  const [subject, setSubject] = useState<string>(subjects[0]);
   const topicsForSubject = useMemo(
-    () => allTypes.filter((t) => t.subject === subject).map((t) => t.topic),
-    [allTypes, subject]
+    () => topics.filter((t) => t.subject === subject).map((t) => t.topic),
+    [topics, subject]
   );
-  const [topic, setTopic] = useState<string>("");
+  const [topic, setTopic] = useState<string>(topicsForSubject[0]);
   // Default points fixed at 5; remove points UI
   const defaultDate = useMemo(() => {
     return new Date().toISOString().split("T")[0];
@@ -71,7 +73,7 @@ export default function CreateWork() {
             <SelectContent>
               {subjects.map((s) => (
                 <SelectItem key={s} value={s}>
-                  {s}
+                  {capitalize(s)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -80,6 +82,7 @@ export default function CreateWork() {
 
         <div className="space-y-2">
           <Label>Topic</Label>
+
           <Select value={topic} onValueChange={setTopic}>
             <SelectTrigger>
               <SelectValue placeholder="Select topic" />
@@ -87,7 +90,7 @@ export default function CreateWork() {
             <SelectContent>
               {topicsForSubject.map((t) => (
                 <SelectItem key={t} value={t}>
-                  {t}
+                  {capitalize(t)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -104,8 +107,14 @@ export default function CreateWork() {
         </div>
       </div>
 
-      <div className="flex justify-end">
-        <Button onClick={handleCreate} disabled={!canSubmit}>
+      <div className="flex gap-2 justify-end">
+        <CreateTopicDialog />
+        <Button
+          size="sm"
+          className="h-8 gap-1.5 text-xs"
+          onClick={handleCreate}
+          disabled={!canSubmit}
+        >
           Add Work
         </Button>
       </div>
