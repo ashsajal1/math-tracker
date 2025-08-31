@@ -13,6 +13,7 @@ import {
 import { useMathStore, MathProblemType } from "@/lib/store";
 import { topicStore } from "../../lib/store/topicStore";
 import CreateTopicDialog from "../create-topic-dialog";
+import { capitalize } from "@/lib/utils";
 
 export default function CreateWork() {
   const { addProblem } = useMathStore();
@@ -72,7 +73,7 @@ export default function CreateWork() {
             <SelectContent>
               {subjects.map((s) => (
                 <SelectItem key={s} value={s}>
-                  {s}
+                  {capitalize(s)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -89,7 +90,7 @@ export default function CreateWork() {
             <SelectContent>
               {topicsForSubject.map((t) => (
                 <SelectItem key={t} value={t}>
-                  {t}
+                  {capitalize(t)}
                 </SelectItem>
               ))}
             </SelectContent>
