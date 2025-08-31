@@ -27,7 +27,7 @@ export default function CreateWork() {
     () => topics.filter((t) => t.subject === subject).map((t) => t.topic),
     [topics, subject]
   );
-  const [topic, setTopic] = useState<string>("");
+  const [topic, setTopic] = useState<string>(topicsForSubject[0]);
   // Default points fixed at 5; remove points UI
   const defaultDate = useMemo(() => {
     return new Date().toISOString().split("T")[0];
