@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Moon, Sun, Palette, Cloud, Shield, Bell } from "lucide-react";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
+import CreateTopic from "@/components/create-topic";
 
 export default function Settings() {
   return (
@@ -19,6 +20,8 @@ export default function Settings() {
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-muted-foreground">Customize your math tracking experience</p>
       </div>
+
+      <CreateTopic />
 
       {/* Appearance */}
       <Card className="p-6">
