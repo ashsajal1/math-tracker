@@ -10,21 +10,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useMathStore, getAllProblemTypes, MathProblemType } from "@/lib/store";
+import { useMathStore, MathProblemType } from "@/lib/store";
+import { topicStore } from '../../lib/store/topicStore';
 
 export default function CreateWork() {
   const { addProblem } = useMathStore();
-  const allTypes = getAllProblemTypes();
 
-  const subjects = useMemo(() => {
-    const set = new Set(allTypes.map((t) => t.subject));
-    return Array.from(set);
-  }, [allTypes]);
+  const { getTopics } = topicStore();
+
+  const topics = getTopics();
+  const subjects = topics.map((t) => t.subject);
 
   const [subject, setSubject] = useState<string>("Mathematics");
   const topicsForSubject = useMemo(
-    () => allTypes.filter((t) => t.subject === subject).map((t) => t.topic),
-    [allTypes, subject]
+    () => topics.filter((t) => t.subject === subject).map((t) => t.topic),
+    [topics, subject]
   );
   const [topic, setTopic] = useState<string>("");
   // Default points fixed at 5; remove points UI
