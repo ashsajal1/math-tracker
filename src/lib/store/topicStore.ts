@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { persist, createJSONStorage, devtools } from "zustand/middleware";
 import { v4 as uuidv4 } from "uuid";
 
 interface Topic {
@@ -19,42 +19,61 @@ interface TopicStore {
 }
 
 export const topicStore = create<TopicStore>()(
-  persist(
-    (set, get) => ({
-      topics: [],
+  devtools(
+    persist(
+      (set, get) => ({
+        topics: [],
 
-      addTopic: (subject, topic) => {
-        const newTopic = {
-          id: uuidv4(),
-          subject: subject.toLocaleLowerCase(),
-          topic: topic.toLocaleLowerCase(),
-          cretedAt: new Date().toISOString(),
-        };
-        set((state) => ({
-          topics: [...state.topics, newTopic],
-        }));
-      },
+        addTopic: (subject, topic) => {
+          const newTopic = {
+            id: uuidv4(),
+            subject: subject.toLocaleLowerCase(),
+            topic: topic.toLocaleLowerCase(),
+            cretedAt: new Date().toISOString(),
+          };
+          set(
+            (state) => ({
+              topics: [...state.topics, newTopic],
+            }),
+            false,
+            'topic/addTopic'
+          );
+        },
 
-      removeTopic: (id) => {
-        set((state) => ({
-          topics: state.topics.filter((topic) => topic.id !== id),
-        }));
-      },
+        removeTopic: (id) => {
+          set(
+            (state) => ({
+              topics: state.topics.filter((topic) => topic.id !== id),
+            }),
+            false,
+            'topic/removeTopic'
+          );
+        },
 
-      updateTopic: (id, updates) => {
-        set((state) => ({
-          topics: state.topics.map((topic) =>
-            topic.id === id ? { ...topic, ...updates } : topic
-          ),
-        }));
-      },
+        updateTopic: (id, updates) => {
+          set(
+            (state) => ({
+              topics: state.topics.map((topic) =>
+                topic.id === id ? { ...topic, ...updates } : topic
+              ),
+            }),
+            false,
+            'topic/updateTopic'
+          );
+        },
 
-      getTopics: () => get().topics,
-      clearAll: () => set({ topics: [] }),
-    }),
+        getTopics: () => get().topics,
+        
+        clearAll: () => set({ topics: [] }, false, 'topic/clearAll'),
+      }),
+      {
+        name: "topic-store",
+        storage: createJSONStorage(() => localStorage),
+      }
+    ),
     {
-      name: "topic-store",
-      storage: createJSONStorage(() => localStorage),
+      name: 'topicStore',
+      enabled: process.env.NODE_ENV !== 'production',
     }
   )
 );
