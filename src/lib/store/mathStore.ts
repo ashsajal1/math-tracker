@@ -16,13 +16,15 @@ export interface MathProblem {
 
 interface MathStore {
   problems: MathProblem[];
-  addProblem: (type: MathProblemType, points?: number, dateISO?: string) => void;
+  addProblem: (
+    type: MathProblemType,
+    points?: number,
+    dateISO?: string
+  ) => void;
   removeProblem: (id: string) => void;
   removeLastProblem: () => void;
   updateProblem: (id: string, updates: Partial<MathProblem>) => void;
-  getProblemsByType: (type: MathProblemType) => MathProblem[];
   getTotalPoints: () => number;
-  getPointsByType: (type: MathProblemType) => number;
   clearAll: () => void;
 }
 
@@ -66,26 +68,8 @@ export const useMathStore = create<MathStore>()(
         }));
       },
 
-      getProblemsByType: (type) => {
-        return get().problems.filter(
-          (problem) =>
-            problem.type.subject === type.subject &&
-            problem.type.topic === type.topic
-        );
-      },
-
       getTotalPoints: () => {
         return get().problems.reduce((sum, problem) => sum + problem.points, 0);
-      },
-
-      getPointsByType: (type) => {
-        return get()
-          .problems.filter(
-            (problem) =>
-              problem.type.subject === type.subject &&
-              problem.type.topic === type.topic
-          )
-          .reduce((sum, problem) => sum + problem.points, 0);
       },
 
       clearAll: () => {
@@ -98,84 +82,3 @@ export const useMathStore = create<MathStore>()(
     }
   )
 );
-
-// Utility function to get all problem types
-export const getAllProblemTypes = (): MathProblemType[] => [
-  {
-    subject: "Mathematics",
-    topic: "Calculas",
-  },
-  {
-    subject: "Mathematics",
-    topic: "Trigonometry",
-  },
-  {
-    subject: "Mathematics",
-    topic: "Algebra",
-  },
-  {
-    subject: "Mathematics",
-    topic: "Mechanics/Dynamics",
-  },
-  {
-    subject: "Mathematics",
-    topic: "Geometry",
-  },
-  {
-    subject: "Physics",
-    topic: "Physics 1st Paper",
-  },
-  {
-    subject: "Physics",
-    topic: "Physics 2nd Paper",
-  },
-  {
-    subject: "ICT",
-    topic: "Coding & HTML",
-  },
-  {
-    subject: "ICT",
-    topic: "Number system & Digital Device",
-  },
-  {
-    subject: "Biology",
-    topic: "Biology 1st Paper",
-  },
-  {
-    subject: "Biology",
-    topic: "Biology 2nd Paper",
-  },
-  {
-    subject: "Bangla Grammer",
-    topic: "Bangla Grammer",
-  },
-  {
-    subject: "English Grammer",
-    topic: "English Grammer",
-  },
-  {
-    subject: "Chemistry",
-    topic: "Organic Chemistry",
-  },
-  {
-    subject: "Chemistry",
-    topic: "Inorganic Chemistry",
-  },
-  {
-    subject: "Chemistry",
-    topic: "Chemistry 1st Paper",
-  },
-];
-
-// Utility function to get points for all types
-// Returns an object keyed by "<subject>:<topic>" with total points per type
-export const getPointsForAllTypes = (): Record<string, number> => {
-  const store = useMathStore.getState();
-  const types = getAllProblemTypes();
-  const totals: Record<string, number> = {};
-  for (const t of types) {
-    const key = `${t.subject}:${t.topic}`;
-    totals[key] = store.getPointsByType(t);
-  }
-  return totals;
-};
