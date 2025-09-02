@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
 
 export default function Stats() {
-  const { problems } = useMathStore();
+  const { problems, getPointsByType } = useMathStore();
   const problemTypes = useMemo(() => {
     const typeMap = new Map<string, MathProblemType>();
     problems.forEach((p) => {
@@ -26,7 +26,7 @@ export default function Stats() {
         value: problems.filter(p => 
           p.type.subject === type.subject && p.type.topic === type.topic
         ).length,
-        points: 100,
+        points: getPointsByType(type),
       };
     });
 
@@ -45,7 +45,7 @@ export default function Stats() {
         { date: "", count: 0 }
       ),
     };
-  }, [problems, problemTypes]);
+  }, [problems, problemTypes, getPointsByType]);
 
   // Colors for the pie chart
   const COLORS = [

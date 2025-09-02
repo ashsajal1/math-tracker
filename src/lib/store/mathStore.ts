@@ -25,6 +25,7 @@ interface MathStore {
   removeLastProblem: () => void;
   updateProblem: (id: string, updates: Partial<MathProblem>) => void;
   getTotalPoints: () => number;
+  getPointsByType: (type: MathProblemType) => number;
   clearAll: () => void;
 }
 
@@ -70,6 +71,10 @@ export const useMathStore = create<MathStore>()(
 
       getTotalPoints: () => {
         return get().problems.reduce((sum, problem) => sum + problem.points, 0);
+      },
+
+      getPointsByType: (type: MathProblemType) => {
+        return get().problems.filter(p => p.type.subject === type.subject && p.type.topic === type.topic).reduce((sum, problem) => sum + problem.points, 0);
       },
 
       clearAll: () => {
