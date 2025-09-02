@@ -10,8 +10,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { motion } from "framer-motion";
-import { useMathStore, getAllProblemTypes } from "@/lib/store";
+import { useMathStore } from "@/lib/store";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { topicStore } from '../../lib/store/topicStore';
 import {
   Select,
   SelectContent,
@@ -33,11 +34,12 @@ type FilterType = "week" | "month" | "all";
 export default function PointsGraph() {
   const { problems } = useMathStore();
   const [filter, setFilter] = useState<FilterType>("week");
-  const allTypes = getAllProblemTypes();
+
+  const { topics } = topicStore();
   const subjects = useMemo(() => {
-    const set = new Set(allTypes.map((t) => t.subject));
+    const set = new Set(topics.map((t) => t.subject));
     return ["All", ...Array.from(set)];
-  }, [allTypes]);
+  }, [topics]);
   const [selectedSubject, setSelectedSubject] = useState<string>("All");
 
   const filteredProblems = useMemo(() => {
