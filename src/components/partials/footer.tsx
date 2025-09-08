@@ -1,5 +1,15 @@
-import { Github, Home, BarChart3, User, Settings, BookOpen, HelpCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { motion } from "framer-motion";
+import {
+  Github,
+  Home,
+  BarChart3,
+  User,
+  Settings,
+  BookOpen,
+  HelpCircle,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import Logo from "../Logo";
 
 type FooterLink = {
   name: string;
@@ -15,29 +25,47 @@ type FooterSection = {
 
 const footerLinks: FooterSection[] = [
   {
-    title: 'Navigation',
+    title: "Navigation",
     links: [
-      { name: 'Home', href: '/', icon: <Home className="w-4 h-4" /> },
-      { name: 'Stats', href: '/stats', icon: <BarChart3 className="w-4 h-4" /> },
-      { name: 'Profile', href: '/profile', icon: <User className="w-4 h-4" /> },
-      { name: 'Settings', href: '/settings', icon: <Settings className="w-4 h-4" /> },
+      { name: "Home", href: "/", icon: <Home className="w-4 h-4" /> },
+      {
+        name: "Stats",
+        href: "/stats",
+        icon: <BarChart3 className="w-4 h-4" />,
+      },
+      { name: "Profile", href: "/profile", icon: <User className="w-4 h-4" /> },
+      {
+        name: "Settings",
+        href: "/settings",
+        icon: <Settings className="w-4 h-4" />,
+      },
     ],
   },
   {
-    title: 'Resources',
+    title: "Resources",
     links: [
-      { name: 'Documentation', href: '/docs', icon: <BookOpen className="w-4 h-4" />, external: true },
-      { name: 'Help Center', href: '/help', icon: <HelpCircle className="w-4 h-4" />, external: true },
+      {
+        name: "Documentation",
+        href: "/docs",
+        icon: <BookOpen className="w-4 h-4" />,
+        external: true,
+      },
+      {
+        name: "Help Center",
+        href: "/help",
+        icon: <HelpCircle className="w-4 h-4" />,
+        external: true,
+      },
     ],
   },
   {
-    title: 'Connect',
+    title: "Connect",
     links: [
-      { 
-        name: 'GitHub', 
-        href: 'https://github.com/ashsajal1/math-tracker', 
-        icon: <Github className="w-4 h-4" />, 
-        external: true 
+      {
+        name: "GitHub",
+        href: "https://github.com/ashsajal1/math-tracker",
+        icon: <Github className="w-4 h-4" />,
+        external: true,
       },
     ],
   },
@@ -50,12 +78,22 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <h3 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                Math Tracker
-              </h3>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="cursor-pointer select-none"
+              >
+                <div className="flex items-center gap-2">
+                  <Logo className="h-8 w-auto text-black dark:text-white" />
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">
+                    Math Tracker
+                  </h1>
+                </div>
+              </motion.div>
             </div>
             <p className="text-muted-foreground text-sm">
-              Track your math practice, monitor progress, and improve your skills with our intuitive platform.
+              Track your math practice, monitor progress, and improve your
+              skills with our intuitive platform.
             </p>
             <div className="flex space-x-4 pt-2">
               <a
@@ -107,16 +145,26 @@ export default function Footer() {
         <div className="mt-12 pt-8 border-t border-border">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} Math Tracker. All rights reserved.
+              &copy; {new Date().getFullYear()} Math Tracker. All rights
+              reserved.
             </p>
             <div className="mt-4 md:mt-0 flex space-x-6">
-              <a href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <a
+                href="/privacy"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
                 Privacy
               </a>
-              <a href="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <a
+                href="/terms"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
                 Terms
               </a>
-              <a href="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <a
+                href="/contact"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
                 Contact
               </a>
             </div>
