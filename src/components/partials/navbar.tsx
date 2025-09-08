@@ -52,7 +52,7 @@ export default function Navbar() {
       onClick={handleNavClick}
     >
       <div className="flex items-center gap-8">
-        <Link to='/' className="flex-shrink-0">
+        <Link to='/' className="flex-shrink-0 select-none">
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
