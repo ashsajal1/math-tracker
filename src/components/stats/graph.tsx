@@ -46,7 +46,7 @@ export default function PointsGraph() {
     let subjectFiltered = problems;
     if (selectedSubject !== "All") {
       subjectFiltered = problems.filter(
-        (p) => p.type.subject === selectedSubject
+        (p) => p.type.subject.toLowerCase() === selectedSubject.toLowerCase()
       );
     }
 
