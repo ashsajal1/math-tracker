@@ -213,8 +213,8 @@ export default function PointsGraph() {
                     fontSize: 12,
                     fill: "hsl(var(--muted-foreground))",
                   }}
-                  tickFormatter={(value) => `${value}`}
-                  width={30}
+                  tickFormatter={(value) => `${value} XP`}
+                  width={70}
                 />
                 <Tooltip
                   content={({ active, payload, label }) => {
