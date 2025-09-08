@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import type { MathProblem } from "@/lib/store/mathStore";
+import { capitalize } from '../../lib/utils';
 
 type HistoryCardProps = {
   problem: MathProblem;
@@ -21,10 +22,10 @@ export default function HistoryCard({ problem, onRemove }: HistoryCardProps) {
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 flex-wrap">
             <Badge variant="secondary" className="text-xs">
-              {problem.type.subject}
+              {problem.type.subject.toUpperCase()}
             </Badge>
             <span className="text-sm font-medium text-foreground">
-              {problem.type.topic}
+              {capitalize(problem.type.topic)}
             </span>
           </div>
           <span className="text-xs text-muted-foreground">
