@@ -21,7 +21,7 @@ export default function CreateWork() {
   const { getTopics } = topicStore();
 
   const topics = getTopics();
-  const subjects = Array.from(new Set(topics.map((t) => t.subject)));
+  const subjects = Array.from(new Set(topics.map((t) => t.subject.toLowerCase())));
 
   const [subject, setSubject] = useState<string>(subjects[0]);
   const topicsForSubject = useMemo(
