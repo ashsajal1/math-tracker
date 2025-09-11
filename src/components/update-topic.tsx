@@ -3,10 +3,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Pencil, Trash2, BookOpen } from "lucide-react";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 import { toast } from "sonner";
 
 export default function UpdateTopic() {
@@ -58,12 +70,14 @@ export default function UpdateTopic() {
       </CardHeader>
       <CardContent className="space-y-4">
         {topics.length === 0 ? (
-          <p className="text-muted-foreground text-center py-4">No topics found. Add some topics to get started.</p>
+          <p className="text-muted-foreground text-center py-4">
+            No topics found. Add some topics to get started.
+          </p>
         ) : (
           <div className="space-y-4">
             {topics.map((item) => (
-              <div 
-                key={item.id} 
+              <div
+                key={item.id}
                 className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors"
               >
                 <div>
@@ -74,16 +88,16 @@ export default function UpdateTopic() {
                   </span>
                 </div>
                 <div className="flex gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => openEditDialog(item)}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     className="text-destructive hover:text-destructive/90"
                     onClick={() => handleDelete(item.id)}
                   >
@@ -151,17 +165,15 @@ export default function UpdateTopic() {
                       <SelectValue placeholder="Select points" />
                     </SelectTrigger>
                     <SelectContent>
-                      {[1, 2, 3, 4, 5].map((num) => (
+                      {[5, 10, 15, 20, 25, 30, 50].map((num) => (
                         <SelectItem key={num} value={num.toString()}>
-                          {num} point{num > 1 ? 's' : ''}
+                          {num} point{num > 1 ? "s" : ""}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                {error && (
-                  <p className="text-sm text-destructive">{error}</p>
-                )}
+                {error && <p className="text-sm text-destructive">{error}</p>}
                 <div className="flex justify-end gap-2 pt-2">
                   <Button
                     type="button"
