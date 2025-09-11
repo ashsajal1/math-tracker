@@ -1,13 +1,20 @@
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Moon, Sun, Palette, Cloud, Shield, Bell } from "lucide-react";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import CreateTopic from "@/components/create-topic";
 import MigrateTopics from "@/components/migrate-topic";
+import { Tabs, TabsContent, TabsTrigger, TabsList } from "@/components/ui/tabs";
 
 export default function Settings() {
   return (
@@ -19,11 +26,29 @@ export default function Settings() {
     >
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Customize your math tracking experience</p>
+        <p className="text-muted-foreground">
+          Customize your math tracking experience
+        </p>
       </div>
       <MigrateTopics />
-      <CreateTopic />
-     
+      <Tabs defaultValue="create">
+        <TabsList>
+          <TabsTrigger value="create">Create Topic</TabsTrigger>
+          <TabsTrigger value="update">Update Topic</TabsTrigger>
+          <TabsTrigger value="delete">Delete Topic</TabsTrigger>
+        </TabsList>
+        <TabsContent value="create">
+          <CreateTopic />
+        </TabsContent>
+        <TabsContent value="update">
+          {/* <UpdateTopic /> */}
+          update
+        </TabsContent>
+        <TabsContent value="delete">
+          {/* <DeleteTopic /> */}
+          delete
+        </TabsContent>
+      </Tabs>
 
       {/* Appearance */}
       <Card className="p-6">
@@ -32,7 +57,9 @@ export default function Settings() {
             <Palette className="h-6 w-6 text-primary" />
             <div>
               <h3 className="text-lg font-semibold">Appearance</h3>
-              <p className="text-sm text-muted-foreground">Customize how Math Tracker looks</p>
+              <p className="text-sm text-muted-foreground">
+                Customize how Math Tracker looks
+              </p>
             </div>
           </div>
 
@@ -40,7 +67,9 @@ export default function Settings() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Theme</Label>
-                <p className="text-sm text-muted-foreground">Select your preferred theme</p>
+                <p className="text-sm text-muted-foreground">
+                  Select your preferred theme
+                </p>
               </div>
               <Select defaultValue="system">
                 <SelectTrigger className="w-[180px]">
@@ -74,7 +103,9 @@ export default function Settings() {
             <Bell className="h-6 w-6 text-primary" />
             <div>
               <h3 className="text-lg font-semibold">Notifications</h3>
-              <p className="text-sm text-muted-foreground">Manage your notification preferences</p>
+              <p className="text-sm text-muted-foreground">
+                Manage your notification preferences
+              </p>
             </div>
           </div>
           <NotificationSettings />
@@ -88,7 +119,9 @@ export default function Settings() {
             <Cloud className="h-6 w-6 text-primary" />
             <div>
               <h3 className="text-lg font-semibold">Data Management</h3>
-              <p className="text-sm text-muted-foreground">Manage your data and preferences</p>
+              <p className="text-sm text-muted-foreground">
+                Manage your data and preferences
+              </p>
             </div>
           </div>
 
@@ -96,7 +129,9 @@ export default function Settings() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Auto Sync</Label>
-                <p className="text-sm text-muted-foreground">Automatically sync your progress</p>
+                <p className="text-sm text-muted-foreground">
+                  Automatically sync your progress
+                </p>
               </div>
               <Switch defaultChecked />
             </div>
@@ -105,7 +140,9 @@ export default function Settings() {
               <Button variant="outline" className="w-full sm:w-auto">
                 Export Data
               </Button>
-              <p className="text-sm text-muted-foreground">Download your progress data</p>
+              <p className="text-sm text-muted-foreground">
+                Download your progress data
+              </p>
             </div>
           </div>
         </div>
@@ -118,7 +155,9 @@ export default function Settings() {
             <Shield className="h-6 w-6 text-primary" />
             <div>
               <h3 className="text-lg font-semibold">Privacy</h3>
-              <p className="text-sm text-muted-foreground">Manage your privacy settings</p>
+              <p className="text-sm text-muted-foreground">
+                Manage your privacy settings
+              </p>
             </div>
           </div>
 
@@ -126,7 +165,9 @@ export default function Settings() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Share Progress</Label>
-                <p className="text-sm text-muted-foreground">Allow others to see your progress</p>
+                <p className="text-sm text-muted-foreground">
+                  Allow others to see your progress
+                </p>
               </div>
               <Switch />
             </div>
