@@ -38,7 +38,9 @@ export default function Settings() {
           <TabsTrigger value="update">Update Topic</TabsTrigger>
         </TabsList>
         <TabsContent value="create">
-          <CreateTopic />
+          <Card>
+            <CreateTopic />
+          </Card>
         </TabsContent>
         <TabsContent value="update">
           <UpdateTopic />
