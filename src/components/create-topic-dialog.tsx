@@ -17,7 +17,7 @@ import { capitalize } from "@/lib/utils";
 export default function CreateTopicDialog() {
   const { addTopic, topics } = topicStore();
   // Get unique subjects from both store and local state
-  const storeSubjects = Array.from(new Set(topics.map((t) => t.subject)));
+  const storeSubjects = Array.from(new Set(topics.map((t) => t.subject.toLowerCase())));
   const [localSubjects, setLocalSubjects] = useState<string[]>([]);
   // Combine store and local subjects, removing duplicates
   const allSubjects = Array.from(new Set([...storeSubjects, ...localSubjects]));
