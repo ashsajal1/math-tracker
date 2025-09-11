@@ -15,6 +15,7 @@ import { NotificationSettings } from "@/components/settings/NotificationSettings
 import CreateTopic from "@/components/create-topic";
 import MigrateTopics from "@/components/migrate-topic";
 import { Tabs, TabsContent, TabsTrigger, TabsList } from "@/components/ui/tabs";
+import UpdateTopic from "@/components/update-topic";
 
 export default function Settings() {
   return (
@@ -35,18 +36,12 @@ export default function Settings() {
         <TabsList>
           <TabsTrigger value="create">Create Topic</TabsTrigger>
           <TabsTrigger value="update">Update Topic</TabsTrigger>
-          <TabsTrigger value="delete">Delete Topic</TabsTrigger>
         </TabsList>
         <TabsContent value="create">
           <CreateTopic />
         </TabsContent>
         <TabsContent value="update">
-          {/* <UpdateTopic /> */}
-          update
-        </TabsContent>
-        <TabsContent value="delete">
-          {/* <DeleteTopic /> */}
-          delete
+          <UpdateTopic />
         </TabsContent>
       </Tabs>
 
