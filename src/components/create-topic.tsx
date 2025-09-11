@@ -2,16 +2,23 @@ import { topicStore } from "@/lib/store/topicStore";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 import { PlusCircle, BookOpen, BookMarked, AlertCircle } from "lucide-react";
 import { Label } from "./ui/label";
-import { Card } from "./ui/card";
 import { capitalize } from "@/lib/utils";
 
 export default function CreateTopic() {
   const { addTopic, topics } = topicStore();
   // Get unique subjects from both store and local state
-  const storeSubjects = Array.from(new Set(topics.map((t) => t.subject.toLowerCase())));
+  const storeSubjects = Array.from(
+    new Set(topics.map((t) => t.subject.toLowerCase()))
+  );
   const [localSubjects, setLocalSubjects] = useState<string[]>([]);
   // Combine store and local subjects, removing duplicates
   const allSubjects = Array.from(new Set([...storeSubjects, ...localSubjects]));
@@ -19,16 +26,18 @@ export default function CreateTopic() {
   const [topic, setTopic] = useState<string>("");
   const [subject, setSubject] = useState<string>("");
   const [newSubject, setNewSubject] = useState<string>("");
-  const [showNewSubjectInput, setShowNewSubjectInput] = useState<boolean>(false);
+  const [showNewSubjectInput, setShowNewSubjectInput] =
+    useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [points, setPoints] = useState<number>(5);
 
   const handleAddTopic = () => {
     if (!topic.trim() || !subject) {
       setError("Please fill in all fields");
       return;
     }
-    
-    addTopic(subject, topic);
+
+    addTopic(subject, topic, points);
     setTopic("");
     setError("");
   };
@@ -38,14 +47,14 @@ export default function CreateTopic() {
       setError("Subject name cannot be empty");
       return;
     }
-    
+
     if (allSubjects.includes(newSubject)) {
       setError("Subject already exists");
       return;
     }
-    
+
     // Add to local subjects and select it
-    setLocalSubjects(prev => [...prev, newSubject]);
+    setLocalSubjects((prev) => [...prev, newSubject]);
     setSubject(newSubject);
     setNewSubject("");
     setShowNewSubjectInput(false);
@@ -53,14 +62,16 @@ export default function CreateTopic() {
   };
 
   return (
-    <Card className="w-full mx-auto overflow-hidden">
+    <>
       <div className="p-6 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-primary/10 text-primary">
             <BookOpen className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold tracking-tight">Manage Subjects & Topics</h2>
+            <h2 className="text-xl font-semibold tracking-tight">
+              Manage Subjects & Topics
+            </h2>
             <p className="text-sm text-muted-foreground">
               Organize your study materials efficiently
             </p>
@@ -72,10 +83,15 @@ export default function CreateTopic() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <Label htmlFor="subject" className="text-sm font-medium text-foreground">
+              <Label
+                htmlFor="subject"
+                className="text-sm font-medium text-foreground"
+              >
                 Subject
               </Label>
-              <p className="text-xs text-muted-foreground">Select or create a subject</p>
+              <p className="text-xs text-muted-foreground">
+                Select or create a subject
+              </p>
             </div>
             {!showNewSubjectInput && (
               <Button
@@ -140,22 +156,46 @@ export default function CreateTopic() {
         </div>
 
         <div className="space-y-3 pt-2">
-          <div>
-            <Label htmlFor="topic" className="text-sm font-medium text-foreground">
-              Topic
-            </Label>
-            <p className="text-xs text-muted-foreground">Add a new topic to the selected subject</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label
+                htmlFor="topic"
+                className="text-sm font-medium text-foreground"
+              >
+                Topic
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Add a new topic to the selected subject
+              </p>
+            </div>
+
+            <Select
+              value={points.toString()}
+              onValueChange={(value) => setPoints(parseInt(value))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select points" />
+              </SelectTrigger>
+              <SelectContent>
+                {[5, 10, 15, 20, 25, 30, 50].map((num) => (
+                  <SelectItem key={num} value={num.toString()}>
+                    {num} point{num > 1 ? "s" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+
           <div className="flex gap-2">
             <Input
               id="topic"
               placeholder="Enter topic name"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAddTopic()}
+              onKeyDown={(e) => e.key === "Enter" && handleAddTopic()}
               className="flex-1 h-10"
             />
-            <Button 
+            <Button
               onClick={handleAddTopic}
               disabled={!topic.trim() || !subject}
               className="gap-1.5 h-10"
@@ -173,6 +213,6 @@ export default function CreateTopic() {
           </div>
         )}
       </div>
-    </Card>
+    </>
   );
 }
