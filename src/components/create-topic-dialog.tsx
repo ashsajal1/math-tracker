@@ -36,7 +36,7 @@ export default function CreateTopicDialog() {
       return;
     }
 
-    addTopic(subject, topic);
+    addTopic(subject, topic, points);
     setTopic("");
     setError("");
   };
