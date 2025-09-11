@@ -1,4 +1,4 @@
-import { topicStore } from "@/lib/store/topicStore";
+import { Topic, topicStore } from "@/lib/store/topicStore";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Pencil, Trash2, BookOpen } from "lucide-react";
@@ -12,12 +12,7 @@ import { toast } from "sonner";
 export default function UpdateTopic() {
   const { topics, updateTopic, removeTopic } = topicStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTopic, setEditingTopic] = useState<{
-    id: string;
-    subject: string;
-    topic: string;
-    points: number;
-  } | null>(null);
+  const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
   const [error, setError] = useState("");
 
   const handleUpdate = (e: React.FormEvent) => {
@@ -47,7 +42,7 @@ export default function UpdateTopic() {
     }
   };
 
-  const openEditDialog = (topic: any) => {
+  const openEditDialog = (topic: Topic) => {
     setEditingTopic(topic);
     setError("");
     setIsDialogOpen(true);

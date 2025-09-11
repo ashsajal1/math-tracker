@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage, devtools } from "zustand/middleware";
 import { v4 as uuidv4 } from "uuid";
 
-interface Topic {
+export interface Topic {
   id: string;
   subject: string;
   topic: string;
