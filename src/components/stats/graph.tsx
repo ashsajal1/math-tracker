@@ -28,6 +28,7 @@ import {
   endOfMonth,
   eachDayOfInterval,
 } from "date-fns";
+import { capitalize } from "@/lib/utils";
 
 type FilterType = "week" | "month" | "all";
 
@@ -37,7 +38,7 @@ export default function PointsGraph() {
 
   const { topics } = topicStore();
   const subjects = useMemo(() => {
-    const set = new Set(topics.map((t) => t.subject));
+    const set = new Set(topics.map((t) => t.subject.toLowerCase()));
     return ["All", ...Array.from(set)];
   }, [topics]);
   const [selectedSubject, setSelectedSubject] = useState<string>("All");
@@ -124,7 +125,7 @@ export default function PointsGraph() {
               <SelectContent>
                 {subjects.map((s) => (
                   <SelectItem key={s} value={s}>
-                    {s}
+                    {capitalize(s)}
                   </SelectItem>
                 ))}
               </SelectContent>
