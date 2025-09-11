@@ -6,6 +6,7 @@ interface Topic {
   id: string;
   subject: string;
   topic: string;
+  points?: number;
   cretedAt: string;
 }
 
