@@ -28,6 +28,7 @@ export default function CreateTopicDialog() {
   const [showNewSubjectInput, setShowNewSubjectInput] =
     useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [points, setPoints] = useState<number>(5);
 
   const handleAddTopic = () => {
     if (!topic.trim() || !subject) {
@@ -35,7 +36,7 @@ export default function CreateTopicDialog() {
       return;
     }
 
-    addTopic(subject, topic);
+    addTopic(subject, topic, points);
     setTopic("");
     setError("");
   };
@@ -161,17 +162,27 @@ export default function CreateTopicDialog() {
           </div>
 
           <div className="space-y-3 pt-2">
-            <div>
-              <Label
-                htmlFor="topic"
-                className="text-sm font-medium text-foreground"
-              >
-                Topic
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                Add a new topic to the selected subject
-              </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label
+                  htmlFor="topic"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Topic
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Add a new topic to the selected subject
+                </p>
+              </div>
+
+              <Input
+                placeholder="Enter points"
+                className="w-20"
+                value={points}
+                onChange={(e) => setPoints(Number(e.target.value))}
+              />
             </div>
+
             <div className="flex gap-2">
               <Input
                 id="topic"

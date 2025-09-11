@@ -21,7 +21,9 @@ export default function CreateWork() {
   const { getTopics } = topicStore();
 
   const topics = getTopics();
-  const subjects = Array.from(new Set(topics.map((t) => t.subject.toLowerCase())));
+  const subjects = Array.from(
+    new Set(topics.map((t) => t.subject.toLowerCase()))
+  );
 
   const [subject, setSubject] = useState<string>(subjects[0]);
   const topicsForSubject = useMemo(
@@ -48,6 +50,10 @@ export default function CreateWork() {
     if (!canSubmit) return;
     const type: MathProblemType = { subject, topic };
     // Compose ISO with selected date and current time
+    const subjectTopic = topics.find(
+      (t) =>
+        t.subject.toLowerCase() === subject && t.topic.toLowerCase() === topic
+    );
     const now = new Date();
     const [year, month, day] = date.split("-").map(Number);
     const dt = new Date(
@@ -58,7 +64,7 @@ export default function CreateWork() {
       now.getMinutes(),
       now.getSeconds()
     );
-    addProblem(type, 5, dt.toISOString());
+    addProblem(type, subjectTopic?.points || 5, dt.toISOString());
   };
 
   return (
