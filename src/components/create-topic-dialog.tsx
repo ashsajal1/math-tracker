@@ -17,7 +17,9 @@ import { capitalize } from "@/lib/utils";
 export default function CreateTopicDialog() {
   const { addTopic, topics } = topicStore();
   // Get unique subjects from both store and local state
-  const storeSubjects = Array.from(new Set(topics.map((t) => t.subject.toLowerCase())));
+  const storeSubjects = Array.from(
+    new Set(topics.map((t) => t.subject.toLowerCase()))
+  );
   const [localSubjects, setLocalSubjects] = useState<string[]>([]);
   // Combine store and local subjects, removing duplicates
   const allSubjects = Array.from(new Set([...storeSubjects, ...localSubjects]));
@@ -175,12 +177,23 @@ export default function CreateTopicDialog() {
                 </p>
               </div>
 
-              <Input
-                placeholder="Enter points"
-                className="w-20"
-                value={points}
-                onChange={(e) => setPoints(Number(e.target.value))}
-              />
+              <Select
+                value={points.toString()}
+                onValueChange={(value) =>
+                  setPoints(parseInt(value))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select points" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[5, 10, 15, 20, 25, 30, 50].map((num) => (
+                    <SelectItem key={num} value={num.toString()}>
+                      {num} point{num > 1 ? "s" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex gap-2">
