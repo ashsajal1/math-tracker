@@ -11,7 +11,7 @@ export default function TopCategoryCard() {
     // Aggregate points by subject:topic key
     const map = new Map<string, { subject: string; topic: string; points: number }>();
     for (const p of problems) {
-      const key = `${p.type.subject}:${p.type.topic}`;
+      const key = `${p.type.subject.toLocaleLowerCase().trim()}:${p.type.topic.toLocaleLowerCase().trim()}`;
       const entry = map.get(key) ?? { subject: p.type.subject, topic: p.type.topic, points: 0 };
       entry.points += p.points;
       map.set(key, entry);
