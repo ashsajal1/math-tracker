@@ -19,51 +19,51 @@ export default defineConfig({
         theme_color: "#ffffff",
         description: "Track your math problem solving progress",
         icons: icons.map((icon: { src: string; sizes: string }) => ({
-            src: icon.src,
-            sizes: icon.sizes,
-            type: 'image/png',
-            purpose: 'any maskable'
+          src: icon.src,
+          sizes: icon.sizes,
+          type: "image/png",
+          purpose: "any maskable",
         })),
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
+            handler: "CacheFirst",
             options: {
-              cacheName: 'google-fonts-cache',
+              cacheName: "google-fonts-cache",
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
               },
               cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
+                statuses: [0, 200],
+              },
+            },
           },
           {
             urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: 'CacheFirst',
+            handler: "CacheFirst",
             options: {
-              cacheName: 'gstatic-fonts-cache',
+              cacheName: "gstatic-fonts-cache",
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
               },
               cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          }
-        ]
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
       },
       devOptions: {
         enabled: true,
-        type: 'module',
-        navigateFallback: 'index.html',
-        suppressWarnings: true
-      }
+        type: "module",
+        navigateFallback: "index.html",
+        suppressWarnings: true,
+      },
     }),
   ],
   resolve: {
@@ -71,4 +71,5 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  base: "/",
 });
