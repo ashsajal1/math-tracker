@@ -224,20 +224,9 @@ export default function McqPage() {
                         <div className="flex items-center justify-between">
                           <span>{option}</span>
                           <div className="flex items-center gap-2">
-                            {showResults && isCorrect && (
-                              <span className="text-xs font-medium text-emerald-100">
-                                Correct
-                              </span>
-                            )}
+                           
                             {showResults && isSelected && !isCorrect && (
-                              <span className="text-xs font-medium text-rose-100">
-                                Your answer
-                              </span>
-                            )}
-                            {editKeyMode && currentKey === option && (
-                              <span className="text-xs font-medium text-amber-100">
-                                Key
-                              </span>
+                              <span className="text-xs font-medium text-rose-100"></span>
                             )}
                           </div>
                         </div>
