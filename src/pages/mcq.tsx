@@ -187,7 +187,7 @@ export default function McqPage() {
                 <h3 className="font-medium text-slate-900 dark:text-slate-100">
                   {mcq.question}
                 </h3>
-                <span className="text-sm text-slate-500 dark:text-slate-300 absolute -top-6 right-4 bg-primary-foreground/10 px-1 rounded">
+                <span className="text-sm text-slate-500 dark:text-slate-300 absolute -top-6 right-4 bg-primary-foreground px-1 rounded">
                   #{index + 1}
                 </span>
               </div>
