@@ -58,7 +58,7 @@ export default function McqPage() {
 
       return {
         id: n,
-        question: `Which number equals ${n}?`,
+        question: `MCQ: ${n}`,
         options,
         answer: String(n),
       };
