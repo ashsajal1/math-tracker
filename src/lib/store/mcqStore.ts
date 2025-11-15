@@ -1,4 +1,5 @@
 import { createStore } from "zustand";
+import { v4 as uuidv4 } from "uuid";
 
 type QuizQ = {
   id: number; // the number value used to build question
@@ -8,7 +9,7 @@ type QuizQ = {
 };
 
 type QuestionsBatch = {
-  id: number; // unique id for the batch
+  id: string; // unique id for the batch (uuid)
   questions: QuizQ[];
   title: string;
   topic: string; //SUBJECT
@@ -18,22 +19,26 @@ type QuestionsBatch = {
 
 type mcqStore = {
   questionsBatch: QuestionsBatch[];
+  addQuestionsBatch: (batch: Omit<QuestionsBatch, "id">) => void;
+  getQuestionsBatchById: (id: string) => QuestionsBatch | undefined;
+  deletQuesitonbatchById: (id: string) => void;
+  clearAllBatches: () => void;
 };
 
 export const mcqStore = createStore<mcqStore>((set, get) => ({
   questionsBatch: [],
 
-  addQuestionsBatch: (batch: QuestionsBatch) => {
+  addQuestionsBatch: (batch: Omit<QuestionsBatch, "id">) => {
     set((state) => ({
-      questionsBatch: [...state.questionsBatch, batch],
+      questionsBatch: [...state.questionsBatch, { id: uuidv4(), ...batch }],
     }));
   },
 
-  getQuestionsBatchById: (id: number) => {
+  getQuestionsBatchById: (id: string) => {
     return get().questionsBatch.find((batch) => batch.id === id);
   },
 
-  deletQuesitonbatchById: (id: number) => {
+  deletQuesitonbatchById: (id: string) => {
     set((state) => ({
       questionsBatch: state.questionsBatch.filter((batch) => batch.id !== id),
     }));
