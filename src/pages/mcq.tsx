@@ -174,14 +174,14 @@ export default function McqPage() {
         </div>
       </header>
 
-      <main className="space-y-4 grid gap-4 grid-cols-3 md:grid-cols-5">
+      <main className="space-y-4 grid gap-4 grid-cols-1 md:grid-cols-3">
         {quizQuestions.map((mcq, index) => {
           const selected = selectedAnswers[index];
           const currentKey = keyOverrides[index] ?? mcq.answer;
           return (
             <section
               key={mcq.id}
-              className="bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg p-4 shadow-sm"
+              className="bg-white flex items-center dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg p-4 shadow-sm"
             >
               <div className="flex items-center justify-between">
                 <h3 className="font-medium text-slate-900 dark:text-slate-100">
@@ -192,7 +192,7 @@ export default function McqPage() {
                 </span>
               </div>
 
-              <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <ul className="mt-3  gap-3 flex items-center">
                 {mcq.options.map((option, idx) => {
                   const isSelected = selected === option;
                   const isCorrect = option === currentKey;
