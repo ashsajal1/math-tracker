@@ -192,7 +192,7 @@ export default function McqPage() {
                 </span>
               </div>
 
-              <ul className="mt-3  gap-3 flex items-center">
+              <ul className="gap-3 flex items-center">
                 {mcq.options.map((option, idx) => {
                   const isSelected = selected === option;
                   const isCorrect = option === currentKey;
