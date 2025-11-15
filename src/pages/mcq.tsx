@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type QuizQ = {
   id: number; // the number value used to build question
@@ -40,6 +40,10 @@ export default function McqPage() {
 
   const answeredCount = Object.keys(selectedAnswers).length;
 
+  // Timer state
+  const [timeLeft, setTimeLeft] = useState<number | null>(null); // seconds
+  const [timerActive, setTimerActive] = useState(false);
+
   const generateQuiz = () => {
     const rmin = Math.min(min, max);
     const rmax = Math.max(min, max);
@@ -63,8 +67,32 @@ export default function McqPage() {
     setScore(null);
     setKeyOverrides({});
     setEditKeyMode(false);
+
+    // Set timer: 1 min per question
+    setTimeLeft(qs.length * 60);
+    setTimerActive(true);
   };
 
+  // Timer effect (only display, no auto-submit)
+  useEffect(() => {
+    if (!timerActive || timeLeft === null) return;
+    if (timeLeft <= 0) {
+      setTimerActive(false);
+      return;
+    }
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [timerActive, timeLeft]);
+
+  // Format timer display
+  function formatTime(sec: number | null) {
+    if (sec === null) return "--:--";
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  }
   const handleOptionClick = (questionIndex: number, option: string) => {
     if (showResults && !editKeyMode) return; // lock answers when showing results (unless editing key)
     if (editKeyMode && showResults) {
@@ -113,6 +141,7 @@ export default function McqPage() {
 
   return (
     <div className="max-w-full mx-auto p-1 sm:p-6">
+      {formatTime(timeLeft)} {/* Timer Display */}
       {quizQuestions.length === 0 && (
         <header className="mb-6">
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
