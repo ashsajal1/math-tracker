@@ -112,7 +112,7 @@ export default function McqPage() {
   };
 
   return (
-    <div className="max-w-full mx-auto p-4 sm:p-6">
+    <div className="max-w-full mx-auto p-1 sm:p-6">
       {quizQuestions.length === 0 && (
         <header className="mb-6">
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
