@@ -234,7 +234,7 @@ export default function McqPage() {
       </main>
 
       <footer className="mt-6 flex items-center gap-3">
-        {editKeyMode || showResults ? null : (
+        {editKeyMode || quizQuestions.length === 0 || showResults ? null : (
           <button
             onClick={handleCheckAnswers}
             disabled={answeredCount === 0 || showResults}
