@@ -64,7 +64,7 @@ export default function McqPage() {
       };
     });
 
-    setQuizQuestions(qs);
+    setQuizQuestions(qs.sort((a, b) => a.id - b.id));
     setSelectedAnswers({});
     setShowResults(false);
     setScore(null);
