@@ -28,9 +28,12 @@ type mcqStore = {
 export const mcqStore = createStore<mcqStore>((set, get) => ({
   questionsBatch: [],
 
-  addQuestionsBatch: (batch: Omit<QuestionsBatch, "id">) => {
+  addQuestionsBatch: (batch: Omit<QuestionsBatch, "id" | "createdAt">) => {
     set((state) => ({
-      questionsBatch: [...state.questionsBatch, { id: uuidv4(), ...batch }],
+      questionsBatch: [
+        ...state.questionsBatch,
+        { id: uuidv4(), createdAt: new Date().toISOString(), ...batch },
+      ],
     }));
   },
 
