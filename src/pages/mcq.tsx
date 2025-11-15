@@ -246,7 +246,7 @@ export default function McqPage() {
           disabled={answeredCount === 0 || showResults}
           className="px-4 py-2 rounded-md bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Submit Answers
+          Submit
         </button>
 
         <button
@@ -266,7 +266,7 @@ export default function McqPage() {
                   : "bg-slate-100 dark:bg-neutral-700 text-slate-900 dark:text-slate-100"
               }`}
             >
-              {editKeyMode ? "Editing Key" : "Review Key"}
+              {editKeyMode ? "Editing" : "Review"}
             </button>
 
             {editKeyMode ? (
@@ -274,7 +274,7 @@ export default function McqPage() {
                 onClick={handleApplyKey}
                 className="px-3 py-2 rounded-md bg-emerald-600 text-white ml-2"
               >
-                Apply Key
+                Apply
               </button>
             ) : null}
 
