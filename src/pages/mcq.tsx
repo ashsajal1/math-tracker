@@ -1,40 +1,139 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
+
+type QuizQ = {
+  id: number; // the number value used to build question
+  question: string;
+  options: string[];
+  answer: string;
+};
+
+function shuffle<T>(arr: T[]) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function sampleRange(min: number, max: number, count: number) {
+  const pool: number[] = [];
+  for (let i = min; i <= max; i++) pool.push(i);
+  const res: number[] = [];
+  const p = pool.slice();
+  while (res.length < count && p.length) {
+    const idx = Math.floor(Math.random() * p.length);
+    res.push(p.splice(idx, 1)[0]);
+  }
+  return res;
+}
 
 export default function McqPage() {
-  const mcqs = useMemo(
-    () =>
-      Array.from({ length: 10 }, (_, i) => ({
-        question: `Question ${i + 1}`,
-        options: ["Option A", "Option B", "Option C", "Option D"],
-        answer: "Option A",
-      })),
-    []
+  // controls for range + size
+  const [min, setMin] = useState<number>(1);
+  const [max, setMax] = useState<number>(10);
+  const [size, setSize] = useState<number>(5);
+
+  // quiz state
+  const [quizQuestions, setQuizQuestions] = useState<QuizQ[]>(() =>
+    sampleRange(1, 10, 5).map((n) => ({
+      id: n,
+      question: `Select the correct number: ${n}`,
+      options: shuffle([
+        String(n),
+        String(n + 1),
+        String(n + 2),
+        String(Math.max(1, n - 1)),
+      ]),
+      answer: String(n),
+    }))
   );
 
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState<number | null>(null);
 
+  // manual review key overrides
+  const [editKeyMode, setEditKeyMode] = useState(false);
+  const [keyOverrides, setKeyOverrides] = useState<Record<number, string>>({});
+
   const answeredCount = Object.keys(selectedAnswers).length;
 
+  const generateQuiz = () => {
+    const rmin = Math.min(min, max);
+    const rmax = Math.max(min, max);
+    const available = rmax - rmin + 1;
+    const take = Math.max(1, Math.min(size, available));
+    const picks = sampleRange(rmin, rmax, take);
+    const qs: QuizQ[] = picks.map((n) => {
+      // build distractors from range
+      const distractors: number[] = [];
+      for (let i = rmin; i <= rmax; i++) {
+        if (i !== n) distractors.push(i);
+      }
+      // sample 3 distractors (or fewer if small range)
+      const d = shuffle(distractors).slice(0, 3).map(String);
+      const options = shuffle([String(n), ...d]);
+      return {
+        id: n,
+        question: `Which number equals ${n}?`,
+        options,
+        answer: String(n),
+      };
+    });
+
+    setQuizQuestions(qs);
+    setSelectedAnswers({});
+    setShowResults(false);
+    setScore(null);
+    setKeyOverrides({});
+    setEditKeyMode(false);
+  };
+
   const handleOptionClick = (questionIndex: number, option: string) => {
-    if (showResults) return; // lock answers when showing results
+    if (showResults && !editKeyMode) return; // lock answers when showing results (unless editing key)
+    if (editKeyMode && showResults) {
+      // in key edit mode, set the override key
+      setKeyOverrides((prev) => ({ ...prev, [questionIndex]: option }));
+      return;
+    }
     setSelectedAnswers((prev) => ({ ...prev, [questionIndex]: option }));
   };
 
   const handleCheckAnswers = () => {
     let s = 0;
-    mcqs.forEach((m, idx) => {
-      if (selectedAnswers[idx] && selectedAnswers[idx] === m.answer) s += 1;
+    quizQuestions.forEach((q, idx) => {
+      const key = keyOverrides[idx] ?? q.answer;
+      if (selectedAnswers[idx] && selectedAnswers[idx] === key) s += 1;
     });
     setScore(s);
     setShowResults(true);
+    setEditKeyMode(false);
   };
 
   const handleReset = () => {
     setSelectedAnswers({});
     setShowResults(false);
     setScore(null);
+    setKeyOverrides({});
+    setEditKeyMode(false);
+  };
+
+  const handleToggleEditKey = () => {
+    if (!showResults) return;
+    setEditKeyMode((v) => !v);
+  };
+
+  const handleApplyKey = () => {
+    // recompute
+    let s = 0;
+    quizQuestions.forEach((q, idx) => {
+      const key = keyOverrides[idx] ?? q.answer;
+      if (selectedAnswers[idx] && selectedAnswers[idx] === key) s += 1;
+    });
+    setScore(s);
+    setEditKeyMode(false);
+    setShowResults(true);
   };
 
   return (
@@ -43,23 +142,61 @@ export default function McqPage() {
         <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
           Quick MCQ Practice
         </h1>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
-          {answeredCount}/{mcqs.length} answered
-        </p>
-        <div className="h-2 bg-gray-200 dark:bg-neutral-700 rounded-full mt-3 overflow-hidden">
-          <div
-            className="h-full bg-blue-500"
-            style={{ width: `${(answeredCount / mcqs.length) * 100}%` }}
-          />
+
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
+          <label className="flex flex-col text-sm">
+            <span className="text-slate-600 dark:text-slate-300">Min</span>
+            <input
+              type="number"
+              value={min}
+              onChange={(e) => setMin(Number(e.target.value))}
+              className="mt-1 px-2 py-1 rounded border"
+            />
+          </label>
+
+          <label className="flex flex-col text-sm">
+            <span className="text-slate-600 dark:text-slate-300">Max</span>
+            <input
+              type="number"
+              value={max}
+              onChange={(e) => setMax(Number(e.target.value))}
+              className="mt-1 px-2 py-1 rounded border"
+            />
+          </label>
+
+          <label className="flex flex-col text-sm">
+            <span className="text-slate-600 dark:text-slate-300">Questions</span>
+            <input
+              type="number"
+              value={size}
+              onChange={(e) => setSize(Number(e.target.value))}
+              className="mt-1 px-2 py-1 rounded border"
+              min={1}
+            />
+          </label>
+        </div>
+
+        <div className="mt-3 flex gap-2">
+          <button
+            onClick={generateQuiz}
+            className="px-3 py-2 rounded-md bg-blue-600 text-white"
+          >
+            Generate Quiz
+          </button>
+
+          <p className="ml-3 text-sm text-slate-600 dark:text-slate-300">
+            {answeredCount}/{quizQuestions.length} answered
+          </p>
         </div>
       </header>
 
       <main className="space-y-4">
-        {mcqs.map((mcq, index) => {
+        {quizQuestions.map((mcq, index) => {
           const selected = selectedAnswers[index];
+          const currentKey = keyOverrides[index] ?? mcq.answer;
           return (
             <section
-              key={index}
+              key={mcq.id}
               className="bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg p-4 shadow-sm"
             >
               <div className="flex items-center justify-between">
@@ -67,14 +204,14 @@ export default function McqPage() {
                   {mcq.question}
                 </h3>
                 <span className="text-sm text-slate-500 dark:text-slate-300">
-                  {index + 1}
+                  #{index + 1}
                 </span>
               </div>
 
               <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {mcq.options.map((option, idx) => {
                   const isSelected = selected === option;
-                  const isCorrect = option === mcq.answer;
+                  const isCorrect = option === currentKey;
 
                   let stateClasses =
                     "bg-gray-100 dark:bg-neutral-700 text-slate-900 dark:text-slate-100";
@@ -101,16 +238,21 @@ export default function McqPage() {
                       >
                         <div className="flex items-center justify-between">
                           <span>{option}</span>
-                          {showResults && isCorrect && (
-                            <span className="text-xs font-medium text-emerald-100">
-                              Correct
-                            </span>
-                          )}
-                          {showResults && isSelected && !isCorrect && (
-                            <span className="text-xs font-medium text-rose-100">
-                              Your answer
-                            </span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {showResults && isCorrect && (
+                              <span className="text-xs font-medium text-emerald-100">
+                                Correct
+                              </span>
+                            )}
+                            {showResults && isSelected && !isCorrect && (
+                              <span className="text-xs font-medium text-rose-100">
+                                Your answer
+                              </span>
+                            )}
+                            {editKeyMode && currentKey === option && (
+                              <span className="text-xs font-medium text-amber-100">Key</span>
+                            )}
+                          </div>
                         </div>
                       </button>
                     </li>
@@ -128,7 +270,7 @@ export default function McqPage() {
           disabled={answeredCount === 0 || showResults}
           className="px-4 py-2 rounded-md bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Check Answers
+          Submit Answers
         </button>
 
         <button
@@ -138,10 +280,30 @@ export default function McqPage() {
           Reset
         </button>
 
-        {showResults && score !== null && (
-          <div className="ml-auto text-sm font-medium text-slate-900 dark:text-slate-100">
-            Score: <span className="font-semibold">{score}/{mcqs.length}</span>
-          </div>
+        {showResults && (
+          <>
+            <button
+              onClick={handleToggleEditKey}
+              className={`px-3 py-2 rounded-md ${editKeyMode ? "bg-amber-500 text-white" : "bg-slate-100 dark:bg-neutral-700 text-slate-900 dark:text-slate-100"}`}
+            >
+              {editKeyMode ? "Editing Key" : "Review Key"}
+            </button>
+
+            {editKeyMode ? (
+              <button
+                onClick={handleApplyKey}
+                className="px-3 py-2 rounded-md bg-emerald-600 text-white ml-2"
+              >
+                Apply Key
+              </button>
+            ) : null}
+
+            {showResults && score !== null && (
+              <div className="ml-auto text-sm font-medium text-slate-900 dark:text-slate-100">
+                Score: <span className="font-semibold">{score}/{quizQuestions.length}</span>
+              </div>
+            )}
+          </>
         )}
       </footer>
     </div>
