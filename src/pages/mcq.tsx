@@ -22,8 +22,8 @@ function sampleRange(min: number, max: number, count: number) {
 export default function McqPage() {
   // controls for range + size
   const [min, setMin] = useState<number>(1);
-  const [max, setMax] = useState<number>(10);
-  const [size, setSize] = useState<number>(5);
+  const [max, setMax] = useState<number>(50);
+  const [size, setSize] = useState<number>(25);
 
   // quiz state
   const [quizQuestions, setQuizQuestions] = useState<QuizQ[]>([])
