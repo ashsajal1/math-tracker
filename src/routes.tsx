@@ -6,6 +6,7 @@ import ErrorPage from './pages/error';
 import Stats from './pages/stats';
 import Settings from './pages/settings';
 import Profile from './pages/profile';
+import McqPage from './pages/mcq';
 
 export const router = createBrowserRouter([
     {
@@ -28,6 +29,10 @@ export const router = createBrowserRouter([
             {
                 path:'/stats',
                 element: <Stats />
+            },
+            {
+                path:'/mcq',
+                element: <McqPage />
             },
             {
                 path:'*',
