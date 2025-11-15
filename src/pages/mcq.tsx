@@ -120,6 +120,9 @@ export default function McqPage() {
     setScore(null);
     setKeyOverrides({});
     setEditKeyMode(false);
+    setQuizQuestions([]);
+    setTimeLeft(null);
+    setTimerActive(false);
   };
 
   const handleToggleEditKey = () => {
@@ -197,7 +200,6 @@ export default function McqPage() {
           </div>
         </header>
       )}
-
       <main className="space-y-4 grid gap-1 grid-cols-2 md:grid-cols-3 text-sm">
         {quizQuestions.map((mcq, index) => {
           const selected = selectedAnswers[index];
@@ -262,7 +264,6 @@ export default function McqPage() {
           );
         })}
       </main>
-
       <footer className="mt-6 flex items-center gap-3">
         {editKeyMode || quizQuestions.length === 0 || showResults ? null : (
           <button
