@@ -7,15 +7,6 @@ type QuizQ = {
   answer: string;
 };
 
-function shuffle<T>(arr: T[]) {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 function sampleRange(min: number, max: number, count: number) {
   const pool: number[] = [];
   for (let i = min; i <= max; i++) pool.push(i);
@@ -39,17 +30,14 @@ export default function McqPage() {
     sampleRange(1, 10, 5).map((n) => ({
       id: n,
       question: `Select the correct number: ${n}`,
-      options: shuffle([
-        String(n),
-        String(n + 1),
-        String(n + 2),
-        String(Math.max(1, n - 1)),
-      ]),
-      answer: String(n),
+      options: ["K", "L", "M", "N"],
+      answer: "",
     }))
   );
 
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
+  const [selectedAnswers, setSelectedAnswers] = useState<
+    Record<number, string>
+  >({});
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState<number | null>(null);
 
@@ -66,14 +54,8 @@ export default function McqPage() {
     const take = Math.max(1, Math.min(size, available));
     const picks = sampleRange(rmin, rmax, take);
     const qs: QuizQ[] = picks.map((n) => {
-      // build distractors from range
-      const distractors: number[] = [];
-      for (let i = rmin; i <= rmax; i++) {
-        if (i !== n) distractors.push(i);
-      }
-      // sample 3 distractors (or fewer if small range)
-      const d = shuffle(distractors).slice(0, 3).map(String);
-      const options = shuffle([String(n), ...d]);
+      const options: string[] = ["K", "L", "M", "N"];
+
       return {
         id: n,
         question: `Which number equals ${n}?`,
@@ -165,7 +147,9 @@ export default function McqPage() {
           </label>
 
           <label className="flex flex-col text-sm">
-            <span className="text-slate-600 dark:text-slate-300">Questions</span>
+            <span className="text-slate-600 dark:text-slate-300">
+              Questions
+            </span>
             <input
               type="number"
               value={size}
@@ -222,7 +206,8 @@ export default function McqPage() {
                     } else if (isSelected && !isCorrect) {
                       stateClasses = "bg-rose-600 text-white";
                     } else if (!isSelected && isCorrect) {
-                      stateClasses = "ring-2 ring-emerald-400/30 bg-white dark:bg-neutral-800";
+                      stateClasses =
+                        "ring-2 ring-emerald-400/30 bg-white dark:bg-neutral-800";
                     }
                   } else if (isSelected) {
                     stateClasses = "bg-blue-500 text-white";
@@ -250,7 +235,9 @@ export default function McqPage() {
                               </span>
                             )}
                             {editKeyMode && currentKey === option && (
-                              <span className="text-xs font-medium text-amber-100">Key</span>
+                              <span className="text-xs font-medium text-amber-100">
+                                Key
+                              </span>
                             )}
                           </div>
                         </div>
@@ -284,7 +271,11 @@ export default function McqPage() {
           <>
             <button
               onClick={handleToggleEditKey}
-              className={`px-3 py-2 rounded-md ${editKeyMode ? "bg-amber-500 text-white" : "bg-slate-100 dark:bg-neutral-700 text-slate-900 dark:text-slate-100"}`}
+              className={`px-3 py-2 rounded-md ${
+                editKeyMode
+                  ? "bg-amber-500 text-white"
+                  : "bg-slate-100 dark:bg-neutral-700 text-slate-900 dark:text-slate-100"
+              }`}
             >
               {editKeyMode ? "Editing Key" : "Review Key"}
             </button>
@@ -300,7 +291,10 @@ export default function McqPage() {
 
             {showResults && score !== null && (
               <div className="ml-auto text-sm font-medium text-slate-900 dark:text-slate-100">
-                Score: <span className="font-semibold">{score}/{quizQuestions.length}</span>
+                Score:{" "}
+                <span className="font-semibold">
+                  {score}/{quizQuestions.length}
+                </span>
               </div>
             )}
           </>
