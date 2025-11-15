@@ -4,6 +4,8 @@ import CreateWork from "@/components/history/create";
 import StatsSection from "@/components/stats";
 import Seo from "@/components/Seo";
 import PointsGraph from "@/components/stats/graph";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
@@ -23,6 +25,9 @@ export default function Home() {
           <StatsSection />
         </div>
         <div className="flex flex-col gap-2">
+          <Button>
+            <Link to={"/mcq"}>Give unlimited MCQs</Link>
+          </Button>
           <PointsGraph />
           <CreateWork />
 
