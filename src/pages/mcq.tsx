@@ -183,11 +183,11 @@ export default function McqPage() {
               key={mcq.id}
               className="bg-white flex items-center dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg p-4 shadow-sm"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between relative">
                 <h3 className="font-medium text-slate-900 dark:text-slate-100">
                   {mcq.question}
                 </h3>
-                <span className="text-sm text-slate-500 dark:text-slate-300">
+                <span className="text-sm text-slate-500 dark:text-slate-300 absolute -top-6 right-4 bg-primary-foreground/10 px-1 rounded">
                   #{index + 1}
                 </span>
               </div>
