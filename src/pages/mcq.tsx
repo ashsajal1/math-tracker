@@ -174,7 +174,7 @@ export default function McqPage() {
         </div>
       </header>
 
-      <main className="space-y-4 grid gap-4 grid-cols-1 md:grid-cols-3">
+      <main className="space-y-4 grid gap-1 grid-cols-1 md:grid-cols-3">
         {quizQuestions.map((mcq, index) => {
           const selected = selectedAnswers[index];
           const currentKey = keyOverrides[index] ?? mcq.answer;
