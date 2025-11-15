@@ -224,7 +224,6 @@ export default function McqPage() {
                         <div className="flex items-center justify-between">
                           <span>{option}</span>
                           <div className="flex items-center gap-2">
-                           
                             {showResults && isSelected && !isCorrect && (
                               <span className="text-xs font-medium text-rose-100"></span>
                             )}
@@ -241,17 +240,15 @@ export default function McqPage() {
       </main>
 
       <footer className="mt-6 flex items-center gap-3">
-        {
-          editKeyMode || showResults ? null : (
-            <button
-              onClick={handleCheckAnswers}
-              disabled={answeredCount === 0 || showResults}
-              className="px-4 py-2 rounded-md bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Submit
-            </button>
-          )
-        }
+        {editKeyMode || showResults ? null : (
+          <button
+            onClick={handleCheckAnswers}
+            disabled={answeredCount === 0 || showResults}
+            className="px-4 py-2 rounded-md bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Submit
+          </button>
+        )}
 
         <button
           onClick={handleReset}
@@ -262,16 +259,20 @@ export default function McqPage() {
 
         {showResults && (
           <>
-            <button
-              onClick={handleToggleEditKey}
-              className={`px-3 py-2 rounded-md ${
-                editKeyMode
-                  ? "bg-amber-500 text-white"
-                  : "bg-slate-100 dark:bg-neutral-700 text-slate-900 dark:text-slate-100"
-              }`}
-            >
-              {editKeyMode ? "Editing" : "Review"}
-            </button>
+            {editKeyMode
+              ? null
+              : showResults && (
+                  <button
+                    onClick={handleToggleEditKey}
+                    className={`px-3 py-2 rounded-md ${
+                      editKeyMode
+                        ? "bg-amber-500 text-white"
+                        : "bg-slate-100 dark:bg-neutral-700 text-slate-900 dark:text-slate-100"
+                    }`}
+                  >
+                    Review
+                  </button>
+                )}
 
             {editKeyMode ? (
               <button
