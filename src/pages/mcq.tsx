@@ -29,7 +29,7 @@ export default function McqPage() {
   const [quizQuestions, setQuizQuestions] = useState<QuizQ[]>(() =>
     sampleRange(1, 10, 5).map((n) => ({
       id: n,
-      question: `MCQ: ${n}`,
+      question: `${n}`,
       options: ["K", "L", "M", "N"],
       answer: "",
     }))
@@ -58,7 +58,7 @@ export default function McqPage() {
 
       return {
         id: n,
-        question: `MCQ: ${n}`,
+        question: `${n}`,
         options,
         answer: String(n),
       };
