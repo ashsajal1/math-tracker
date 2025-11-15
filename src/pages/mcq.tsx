@@ -241,13 +241,17 @@ export default function McqPage() {
       </main>
 
       <footer className="mt-6 flex items-center gap-3">
-        <button
-          onClick={handleCheckAnswers}
-          disabled={answeredCount === 0 || showResults}
-          className="px-4 py-2 rounded-md bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Submit
-        </button>
+        {
+          editKeyMode || showResults ? null : (
+            <button
+              onClick={handleCheckAnswers}
+              disabled={answeredCount === 0 || showResults}
+              className="px-4 py-2 rounded-md bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Submit
+            </button>
+          )
+        }
 
         <button
           onClick={handleReset}
