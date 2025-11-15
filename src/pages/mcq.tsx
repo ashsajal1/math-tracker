@@ -26,14 +26,8 @@ export default function McqPage() {
   const [size, setSize] = useState<number>(5);
 
   // quiz state
-  const [quizQuestions, setQuizQuestions] = useState<QuizQ[]>(() =>
-    sampleRange(1, 10, 5).map((n) => ({
-      id: n,
-      question: `${n}`,
-      options: ["K", "L", "M", "N"],
-      answer: "",
-    }))
-  );
+  const [quizQuestions, setQuizQuestions] = useState<QuizQ[]>([])
+  
 
   const [selectedAnswers, setSelectedAnswers] = useState<
     Record<number, string>
@@ -120,7 +114,7 @@ export default function McqPage() {
 
   return (
     <div className="max-w-full mx-auto p-4 sm:p-6">
-      <header className="mb-6">
+      {quizQuestions.length === 0 && (<header className="mb-6">
         <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
           Quick MCQ Practice
         </h1>
@@ -172,7 +166,7 @@ export default function McqPage() {
             {answeredCount}/{quizQuestions.length} answered
           </p>
         </div>
-      </header>
+      </header>)}
 
       <main className="space-y-4 grid gap-1 grid-cols-2 md:grid-cols-3 text-sm">
         {quizQuestions.map((mcq, index) => {
