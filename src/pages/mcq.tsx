@@ -26,8 +26,7 @@ export default function McqPage() {
   const [size, setSize] = useState<number>(25);
 
   // quiz state
-  const [quizQuestions, setQuizQuestions] = useState<QuizQ[]>([])
-  
+  const [quizQuestions, setQuizQuestions] = useState<QuizQ[]>([]);
 
   const [selectedAnswers, setSelectedAnswers] = useState<
     Record<number, string>
@@ -114,59 +113,61 @@ export default function McqPage() {
 
   return (
     <div className="max-w-full mx-auto p-4 sm:p-6">
-      {quizQuestions.length === 0 && (<header className="mb-6">
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-          Quick MCQ Practice
-        </h1>
+      {quizQuestions.length === 0 && (
+        <header className="mb-6">
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+            Quick MCQ Practice
+          </h1>
 
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
-          <label className="flex flex-col text-sm">
-            <span className="text-slate-600 dark:text-slate-300">Min</span>
-            <input
-              type="number"
-              value={min}
-              onChange={(e) => setMin(Number(e.target.value))}
-              className="mt-1 px-2 py-1 rounded border"
-            />
-          </label>
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
+            <label className="flex flex-col text-sm">
+              <span className="text-slate-600 dark:text-slate-300">Min</span>
+              <input
+                type="number"
+                value={min}
+                onChange={(e) => setMin(Number(e.target.value))}
+                className="mt-1 px-2 py-1 rounded border dark:bg-neutral-800 dark:border-neutral-700"
+              />
+            </label>
 
-          <label className="flex flex-col text-sm">
-            <span className="text-slate-600 dark:text-slate-300">Max</span>
-            <input
-              type="number"
-              value={max}
-              onChange={(e) => setMax(Number(e.target.value))}
-              className="mt-1 px-2 py-1 rounded border"
-            />
-          </label>
+            <label className="flex flex-col text-sm">
+              <span className="text-slate-600 dark:text-slate-300">Max</span>
+              <input
+                type="number"
+                value={max}
+                onChange={(e) => setMax(Number(e.target.value))}
+                className="mt-1 px-2 py-1 rounded border dark:bg-neutral-800 dark:border-neutral-700"
+              />
+            </label>
 
-          <label className="flex flex-col text-sm">
-            <span className="text-slate-600 dark:text-slate-300">
-              Questions
-            </span>
-            <input
-              type="number"
-              value={size}
-              onChange={(e) => setSize(Number(e.target.value))}
-              className="mt-1 px-2 py-1 rounded border"
-              min={1}
-            />
-          </label>
-        </div>
+            <label className="flex flex-col text-sm">
+              <span className="text-slate-600 dark:text-slate-300">
+                Questions
+              </span>
+              <input
+                type="number"
+                value={size}
+                onChange={(e) => setSize(Number(e.target.value))}
+                className="mt-1 px-2 py-1 rounded border dark:bg-neutral-800 dark:border-neutral-700"
+                min={1}
+              />
+            </label>
+          </div>
 
-        <div className="mt-3 flex gap-2">
-          <button
-            onClick={generateQuiz}
-            className="px-3 py-2 rounded-md bg-blue-600 text-white"
-          >
-            Generate Quiz
-          </button>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={generateQuiz}
+              className="px-3 py-2 rounded-md bg-blue-600 text-white"
+            >
+              Generate Quiz
+            </button>
 
-          <p className="ml-3 text-sm text-slate-600 dark:text-slate-300">
-            {answeredCount}/{quizQuestions.length} answered
-          </p>
-        </div>
-      </header>)}
+            <p className="ml-3 text-sm text-slate-600 dark:text-slate-300">
+              {answeredCount}/{quizQuestions.length} answered
+            </p>
+          </div>
+        </header>
+      )}
 
       <main className="space-y-4 grid gap-1 grid-cols-2 md:grid-cols-3 text-sm">
         {quizQuestions.map((mcq, index) => {
