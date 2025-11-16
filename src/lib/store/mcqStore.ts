@@ -1,4 +1,4 @@
-import { createStore } from "zustand";
+import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
 
 type QuizQ = {
@@ -25,7 +25,7 @@ type McqStore = {
   clearAllBatches: () => void;
 };
 
-export const mcqStore = createStore<McqStore>((set, get) => ({
+export const mcqStore = create<McqStore>((set, get) => ({
   questionsBatch: [],
 
   addQuestionsBatch: (batch: Omit<QuestionsBatch, "id" | "createdAt">) => {
