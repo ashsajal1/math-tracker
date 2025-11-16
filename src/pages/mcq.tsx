@@ -145,6 +145,7 @@ export default function McqPage() {
   };
 
   const addQuestionsBatch = mcqStore.getState().addQuestionsBatch;
+  const savedQuestionsBatches = mcqStore((state) => state.questionsBatch);
 
   const handleSaveBatch = () => {
     if (quizQuestions.length === 0) return;
@@ -214,6 +215,31 @@ export default function McqPage() {
             </p>
           </div>
         </header>
+      )}
+      {savedQuestionsBatches.length === 0 ? (
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          No quiz generated. Please set the range and size, then click "Generate
+          Quiz" to start practicing.
+        </p>
+      ) : (
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          {savedQuestionsBatches.map((batch, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                setQuizQuestions(batch.questions);
+                setSelectedAnswers({});
+                setShowResults(false);
+                setScore(null);
+                setKeyOverrides({});
+                setEditKeyMode(false);
+                setTimerActive(false);
+              }}
+            >
+              {batch.title}
+            </button>
+          ))}
+        </p>
       )}
       <main className="space-y-4 grid gap-1 grid-cols-2 md:grid-cols-3 text-sm">
         {quizQuestions.map((mcq, index) => {
