@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+import { mcqStore } from "@/lib/store/mcqStore";
 import { useState, useEffect } from "react";
 
 type QuizQ = {
@@ -140,6 +142,19 @@ export default function McqPage() {
     setScore(s);
     setEditKeyMode(false);
     setShowResults(true);
+  };
+
+  const addQuestionsBatch = mcqStore.getState().addQuestionsBatch;
+
+  const handleSaveBatch = () => {
+    if (quizQuestions.length === 0) return;
+    const batch = {
+      questions: quizQuestions,
+      title: `MCQ Practice - ${new Date().toLocaleString()}`,
+      topic: "General",
+      chapter: "Practice",
+    };
+    addQuestionsBatch(batch);
   };
 
   return (
@@ -315,6 +330,7 @@ export default function McqPage() {
                 <span className="font-semibold">
                   {score}/{quizQuestions.length}
                 </span>
+                <Button onClick={handleSaveBatch}>Save</Button>
               </div>
             )}
           </>

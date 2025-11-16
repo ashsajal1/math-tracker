@@ -19,7 +19,7 @@ type QuestionsBatch = {
 
 type McqStore = {
   questionsBatch: QuestionsBatch[];
-  addQuestionsBatch: (batch: Omit<QuestionsBatch, "id">) => void;
+  addQuestionsBatch: (batch: Omit<QuestionsBatch, "id" | "createdAt">) => void;
   getQuestionsBatchById: (id: string) => QuestionsBatch | undefined;
   deletQuesitonbatchById: (id: string) => void;
   clearAllBatches: () => void;
