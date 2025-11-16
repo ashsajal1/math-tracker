@@ -17,7 +17,7 @@ type QuestionsBatch = {
   createdAt: string; // ISO date string
 };
 
-type mcqStore = {
+type McqStore = {
   questionsBatch: QuestionsBatch[];
   addQuestionsBatch: (batch: Omit<QuestionsBatch, "id">) => void;
   getQuestionsBatchById: (id: string) => QuestionsBatch | undefined;
@@ -25,7 +25,7 @@ type mcqStore = {
   clearAllBatches: () => void;
 };
 
-export const mcqStore = createStore<mcqStore>((set, get) => ({
+export const mcqStore = createStore<McqStore>((set, get) => ({
   questionsBatch: [],
 
   addQuestionsBatch: (batch: Omit<QuestionsBatch, "id" | "createdAt">) => {
