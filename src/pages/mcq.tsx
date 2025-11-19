@@ -59,7 +59,7 @@ export default function McqPage() {
         id: n,
         question: `${n}`,
         options,
-        answer: String(n),
+        answer: "",
       };
     });
 
