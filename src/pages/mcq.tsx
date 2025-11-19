@@ -144,18 +144,54 @@ export default function McqPage() {
     setShowResults(true);
   };
 
-  const addQuestionsBatch = mcqStore.getState().addQuestionsBatch;
-  const savedQuestionsBatches = mcqStore((state) => state.questionsBatch);
+  // saved batches local state (subscribe to store updates so UI updates when batches change)
+  const [savedQuestionsBatches, setSavedQuestionsBatches] = useState(
+    mcqStore.getState().questionsBatch
+  );
+
+  useEffect(() => {
+    const unsub = mcqStore.subscribe((state) => {
+      setSavedQuestionsBatches(state.questionsBatch);
+    });
+    return () => unsub();
+  }, []);
+
+  // saved info to show confirmation after saving
+  const [savedInfo, setSavedInfo] = useState<{
+    saved: boolean;
+    score?: number;
+  } | null>(null);
 
   const handleSaveBatch = () => {
     if (quizQuestions.length === 0) return;
+
+    // Build questions where 'answer' stores the user's selected answer for that question
+    const questionsWithUserAnswers: QuizQ[] = quizQuestions.map((q, idx) => ({
+      ...q,
+      answer: selectedAnswers[idx] ?? "",
+    }));
+
     const batch = {
-      questions: quizQuestions,
+      questions: questionsWithUserAnswers,
       title: `MCQ Practice - ${new Date().toLocaleString()}`,
       topic: "General",
       chapter: "Practice",
+      createdAt: new Date().toISOString(),
     };
-    addQuestionsBatch(batch);
+
+    // Save batch to store
+    mcqStore.getState().addQuestionsBatch(batch);
+
+    // Compute saved score by comparing saved answers to the current key (keyOverrides or question.answer before save)
+    let savedScore = 0;
+    questionsWithUserAnswers.forEach((_, idx) => {
+      const key = keyOverrides[idx] ?? quizQuestions[idx].answer;
+      if ((selectedAnswers[idx] ?? "") !== "" && (selectedAnswers[idx] ?? "") === key) {
+        savedScore += 1;
+      }
+    });
+
+    setSavedInfo({ saved: true, score: savedScore });
   };
 
   return (
@@ -357,6 +393,11 @@ export default function McqPage() {
                   {score}/{quizQuestions.length}
                 </span>
                 <Button onClick={handleSaveBatch}>Save</Button>
+                {savedInfo && savedInfo.saved ? (
+                  <span className="ml-3 text-sm text-slate-600 dark:text-slate-300">
+                    Saved ({savedInfo.score}/{quizQuestions.length})
+                  </span>
+                ) : null}
               </div>
             )}
           </>
