@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+import { mcqStore } from "@/lib/store/mcqStore";
 import { useState, useEffect } from "react";
 
 type QuizQ = {
@@ -142,6 +144,20 @@ export default function McqPage() {
     setShowResults(true);
   };
 
+  const addQuestionsBatch = mcqStore.getState().addQuestionsBatch;
+  const savedQuestionsBatches = mcqStore((state) => state.questionsBatch);
+
+  const handleSaveBatch = () => {
+    if (quizQuestions.length === 0) return;
+    const batch = {
+      questions: quizQuestions,
+      title: `MCQ Practice - ${new Date().toLocaleString()}`,
+      topic: "General",
+      chapter: "Practice",
+    };
+    addQuestionsBatch(batch);
+  };
+
   return (
     <div className="max-w-full mx-auto p-1 sm:p-6">
       {formatTime(timeLeft)} {/* Timer Display */}
@@ -199,6 +215,31 @@ export default function McqPage() {
             </p>
           </div>
         </header>
+      )}
+      {savedQuestionsBatches.length === 0 ? (
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          No quiz generated. Please set the range and size, then click "Generate
+          Quiz" to start practicing.
+        </p>
+      ) : (
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          {savedQuestionsBatches.map((batch, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                setQuizQuestions(batch.questions);
+                setSelectedAnswers({});
+                setShowResults(false);
+                setScore(null);
+                setKeyOverrides({});
+                setEditKeyMode(false);
+                setTimerActive(false);
+              }}
+            >
+              {batch.title}
+            </button>
+          ))}
+        </p>
       )}
       <main className="space-y-4 grid gap-1 grid-cols-2 md:grid-cols-3 text-sm">
         {quizQuestions.map((mcq, index) => {
@@ -315,6 +356,7 @@ export default function McqPage() {
                 <span className="font-semibold">
                   {score}/{quizQuestions.length}
                 </span>
+                <Button onClick={handleSaveBatch}>Save</Button>
               </div>
             )}
           </>
