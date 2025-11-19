@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 type QuizQ = {
   id: number; // the number value used to build question
@@ -25,29 +26,36 @@ type McqStore = {
   clearAllBatches: () => void;
 };
 
-export const mcqStore = create<McqStore>((set, get) => ({
-  questionsBatch: [],
+export const mcqStore = create<McqStore>()(
+  persist(
+    (set, get) => ({
+      questionsBatch: [],
 
-  addQuestionsBatch: (batch: Omit<QuestionsBatch, "id" | "createdAt">) => {
-    set((state) => ({
-      questionsBatch: [
-        ...state.questionsBatch,
-        { id: uuidv4(), createdAt: new Date().toISOString(), ...batch },
-      ],
-    }));
-  },
+      addQuestionsBatch: (batch: Omit<QuestionsBatch, "id" | "createdAt">) => {
+        set((state) => ({
+          questionsBatch: [
+            ...state.questionsBatch,
+            { id: uuidv4(), createdAt: new Date().toISOString(), ...batch },
+          ],
+        }));
+      },
 
-  getQuestionsBatchById: (id: string) => {
-    return get().questionsBatch.find((batch) => batch.id === id);
-  },
+      getQuestionsBatchById: (id: string) => {
+        return get().questionsBatch.find((batch) => batch.id === id);
+      },
 
-  deletQuesitonbatchById: (id: string) => {
-    set((state) => ({
-      questionsBatch: state.questionsBatch.filter((batch) => batch.id !== id),
-    }));
-  },
+      deletQuesitonbatchById: (id: string) => {
+        set((state) => ({
+          questionsBatch: state.questionsBatch.filter(
+            (batch) => batch.id !== id
+          ),
+        }));
+      },
 
-  clearAllBatches: () => {
-    set({ questionsBatch: [] });
-  },
-}));
+      clearAllBatches: () => {
+        set({ questionsBatch: [] });
+      },
+    }),
+    { name: "mcq-store", storage: createJSONStorage(() => localStorage) }
+  )
+);
