@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { mcqStore } from "@/lib/store/mcqStore";
+import { topicStore, Topic } from "@/lib/store/topicStore";
 import { useState, useEffect } from "react";
 
 type QuizQ = {
@@ -162,27 +163,49 @@ export default function McqPage() {
     score?: number;
   } | null>(null);
 
+  // save dialog state
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [topics, setTopics] = useState<Topic[]>(topicStore.getState().topics);
+  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(
+    topics.length > 0 ? topics[0].id : null
+  );
+  const [chapterInput, setChapterInput] = useState<string>("Practice");
+
+  useEffect(() => {
+    const unsub = topicStore.subscribe((state) => setTopics(state.topics));
+    return () => unsub();
+  }, []);
+
   const handleSaveBatch = () => {
+    // open dialog to choose topic/chapter
+    if (quizQuestions.length === 0) return;
+    setShowSaveDialog(true);
+    // ensure a selected topic exists
+    setSelectedTopicId((prev) => prev ?? (topics.length > 0 ? topics[0].id : null));
+  };
+
+  const confirmSaveBatch = () => {
     if (quizQuestions.length === 0) return;
 
-    // Build questions where 'answer' stores the user's selected answer for that question
     const questionsWithUserAnswers: QuizQ[] = quizQuestions.map((q, idx) => ({
       ...q,
       answer: selectedAnswers[idx] ?? "",
     }));
 
+    const topicObj = topics.find((t) => t.id === selectedTopicId);
+    const topicName = topicObj ? topicObj.topic : "General";
+
     const batch = {
       questions: questionsWithUserAnswers,
       title: `MCQ Practice - ${new Date().toLocaleString()}`,
-      topic: "General",
-      chapter: "Practice",
+      topic: topicName,
+      chapter: chapterInput || "Practice",
       createdAt: new Date().toISOString(),
     };
 
-    // Save batch to store
     mcqStore.getState().addQuestionsBatch(batch);
 
-    // Compute saved score by comparing saved answers to the current key (keyOverrides or question.answer before save)
+    // compute saved score
     let savedScore = 0;
     questionsWithUserAnswers.forEach((_, idx) => {
       const key = keyOverrides[idx] ?? quizQuestions[idx].answer;
@@ -192,11 +215,62 @@ export default function McqPage() {
     });
 
     setSavedInfo({ saved: true, score: savedScore });
+    setShowSaveDialog(false);
   };
 
   return (
     <div className="max-w-full mx-auto p-1 sm:p-6">
       {formatTime(timeLeft)} {/* Timer Display */}
+
+      {showSaveDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg p-4 w-11/12 max-w-lg">
+            <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-slate-100">
+              Save quiz as batch
+            </h3>
+            <label className="block text-sm mb-2">
+              Topic
+              <select
+                value={selectedTopicId ?? ""}
+                onChange={(e) => setSelectedTopicId(e.target.value)}
+                className="mt-1 w-full px-2 py-1 rounded border dark:bg-neutral-700"
+              >
+                {topics.length === 0 && <option value="">(no topics)</option>}
+                {topics.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {`${t.subject} / ${t.topic}`}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block text-sm mb-4">
+              Chapter
+              <input
+                type="text"
+                value={chapterInput}
+                onChange={(e) => setChapterInput(e.target.value)}
+                className="mt-1 w-full px-2 py-1 rounded border dark:bg-neutral-700"
+              />
+            </label>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowSaveDialog(false)}
+                className="px-3 py-1 rounded bg-slate-100 dark:bg-neutral-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmSaveBatch}
+                className="px-3 py-1 rounded bg-blue-600 text-white"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {quizQuestions.length === 0 && (
         <header className="mb-6">
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
