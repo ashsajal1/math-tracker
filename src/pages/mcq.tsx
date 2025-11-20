@@ -344,7 +344,9 @@ export default function McqPage() {
                   setScore(null);
                   setKeyOverrides({});
                   setEditKeyMode(false);
-                  setTimerActive(false);
+                  // Set timer: 1 min per question
+                  setTimeLeft(loadedBatch.questions.length * 60);
+                  setTimerActive(true);
                 }}
                 onDelete={(id) => {
                   mcqStore.getState().deletQuesitonbatchById(id);
