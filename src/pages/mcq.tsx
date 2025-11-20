@@ -327,7 +327,7 @@ export default function McqPage() {
           </div>
         </header>
       )}
-      {savedQuestionsBatches.length > 0 && (
+      {savedQuestionsBatches.length > 0 && quizQuestions.length === 0 && (
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-4">
             Saved Batches
