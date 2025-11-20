@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { topicStore, Topic } from "@/lib/store/topicStore";
-import { Play, Pause, RotateCcw, X } from "lucide-react";
+import { Play, Pause, RotateCcw, X, Award } from "lucide-react";
+import { useMathStore } from "@/lib/store/mathStore";
 
 interface StopwatchProps {
   isOpen: boolean;
@@ -21,6 +22,10 @@ export const Stopwatch = ({
 
   const [time, setTime] = useState<number>(0); // Time in seconds
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [completedIntervals, setCompletedIntervals] = useState<number>(0); // Track 10-min intervals
+  const lastIntervalRef = useRef<number>(0); // Track last interval where we created a problem
+
+  const addProblem = useMathStore((state) => state.addProblem);
 
   // Subscribe to topic store updates
   useEffect(() => {
@@ -51,6 +56,30 @@ export const Stopwatch = ({
     }
   }, [time, isRunning, onTimeUpdate]);
 
+  // Check for 10-minute intervals and create problems
+  useEffect(() => {
+    const currentInterval = Math.floor(time / 600); // 600 seconds = 10 minutes
+
+    if (currentInterval > lastIntervalRef.current && time > 0) {
+      // We've crossed a new 10-minute interval
+      const selectedTopic = topics.find((t) => t.id === selectedTopicId);
+
+      if (selectedTopic) {
+        // Create a problem in the math store
+        addProblem(
+          {
+            subject: selectedTopic.subject,
+            topic: chapter || selectedTopic.topic,
+          },
+          5 // 5 points for 10 minutes of study
+        );
+
+        setCompletedIntervals(currentInterval);
+        lastIntervalRef.current = currentInterval;
+      }
+    }
+  }, [time, topics, selectedTopicId, chapter, addProblem]);
+
   const formatTime = (seconds: number): string => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -68,6 +97,8 @@ export const Stopwatch = ({
   const handleReset = () => {
     setIsRunning(false);
     setTime(0);
+    setCompletedIntervals(0);
+    lastIntervalRef.current = 0;
   };
 
   const selectedTopic = topics.find((t) => t.id === selectedTopicId);
@@ -140,6 +171,15 @@ export const Stopwatch = ({
                     {selectedTopic.subject} / {selectedTopic.topic}
                   </span>
                   {chapter && <span> - {chapter}</span>}
+                </div>
+              )}
+              {completedIntervals > 0 && (
+                <div className="mt-3 flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400">
+                  <Award className="w-5 h-5" />
+                  <span className="font-medium">
+                    {completedIntervals} problem
+                    {completedIntervals > 1 ? "s" : ""} created! 🎉
+                  </span>
                 </div>
               )}
             </div>
