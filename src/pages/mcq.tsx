@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { mcqStore } from "@/lib/store/mcqStore";
 import { topicStore, Topic } from "@/lib/store/topicStore";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { SavedBatchCard } from "@/components/SavedBatchCard";
 
 type QuizQ = {
@@ -77,19 +77,6 @@ export default function McqPage() {
     setTimerActive(true);
   };
 
-  // Timer effect (only display, no auto-submit)
-  useEffect(() => {
-    if (!timerActive || timeLeft === null) return;
-    if (timeLeft <= 0) {
-      setTimerActive(false);
-      return;
-    }
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => (prev !== null ? prev - 1 : null));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [timerActive, timeLeft]);
-
   // Format timer display
   function formatTime(sec: number | null) {
     if (sec === null) return "--:--";
@@ -107,7 +94,7 @@ export default function McqPage() {
     setSelectedAnswers((prev) => ({ ...prev, [questionIndex]: option }));
   };
 
-  const handleCheckAnswers = () => {
+  const handleCheckAnswers = useCallback(() => {
     let s = 0;
     quizQuestions.forEach((q, idx) => {
       const key = keyOverrides[idx] ?? q.answer;
@@ -116,7 +103,24 @@ export default function McqPage() {
     setScore(s);
     setShowResults(true);
     setEditKeyMode(false);
-  };
+  }, [quizQuestions, keyOverrides, selectedAnswers]);
+
+  // Timer effect - auto-submit when time runs out
+  useEffect(() => {
+    if (!timerActive || timeLeft === null) return;
+    if (timeLeft <= 0) {
+      setTimerActive(false);
+      // Auto-submit when time runs out
+      if (!showResults) {
+        handleCheckAnswers();
+      }
+      return;
+    }
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [timerActive, timeLeft, showResults, handleCheckAnswers]);
 
   const handleReset = () => {
     setSelectedAnswers({});
