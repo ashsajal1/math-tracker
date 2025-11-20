@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { mcqStore } from "@/lib/store/mcqStore";
 import { topicStore, Topic } from "@/lib/store/topicStore";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { SavedBatchCard } from "@/components/SavedBatchCard";
 
 type QuizQ = {
   id: number; // the number value used to build question
@@ -76,19 +77,6 @@ export default function McqPage() {
     setTimerActive(true);
   };
 
-  // Timer effect (only display, no auto-submit)
-  useEffect(() => {
-    if (!timerActive || timeLeft === null) return;
-    if (timeLeft <= 0) {
-      setTimerActive(false);
-      return;
-    }
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => (prev !== null ? prev - 1 : null));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [timerActive, timeLeft]);
-
   // Format timer display
   function formatTime(sec: number | null) {
     if (sec === null) return "--:--";
@@ -106,7 +94,7 @@ export default function McqPage() {
     setSelectedAnswers((prev) => ({ ...prev, [questionIndex]: option }));
   };
 
-  const handleCheckAnswers = () => {
+  const handleCheckAnswers = useCallback(() => {
     let s = 0;
     quizQuestions.forEach((q, idx) => {
       const key = keyOverrides[idx] ?? q.answer;
@@ -115,7 +103,24 @@ export default function McqPage() {
     setScore(s);
     setShowResults(true);
     setEditKeyMode(false);
-  };
+  }, [quizQuestions, keyOverrides, selectedAnswers]);
+
+  // Timer effect - auto-submit when time runs out
+  useEffect(() => {
+    if (!timerActive || timeLeft === null) return;
+    if (timeLeft <= 0) {
+      setTimerActive(false);
+      // Auto-submit when time runs out
+      if (!showResults) {
+        handleCheckAnswers();
+      }
+      return;
+    }
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [timerActive, timeLeft, showResults, handleCheckAnswers]);
 
   const handleReset = () => {
     setSelectedAnswers({});
@@ -326,30 +331,34 @@ export default function McqPage() {
           </div>
         </header>
       )}
-      {savedQuestionsBatches.length === 0 ? (
-        <p className="text-sm text-slate-600 dark:text-slate-300">
-          No quiz generated. Please set the range and size, then click "Generate
-          Quiz" to start practicing.
-        </p>
-      ) : (
-        <p className="text-sm text-slate-600 dark:text-slate-300">
-          {savedQuestionsBatches.map((batch, index) => (
-            <button
-              key={index}
-              onClick={() => {
-                setQuizQuestions(batch.questions);
-                setSelectedAnswers({});
-                setShowResults(false);
-                setScore(null);
-                setKeyOverrides({});
-                setEditKeyMode(false);
-                setTimerActive(false);
-              }}
-            >
-              {batch.title}
-            </button>
-          ))}
-        </p>
+      {savedQuestionsBatches.length > 0 && quizQuestions.length === 0 && (
+        <section className="mb-8">
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-4">
+            Saved Batches
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {savedQuestionsBatches.map((batch) => (
+              <SavedBatchCard
+                key={batch.id}
+                batch={batch}
+                onLoad={(loadedBatch) => {
+                  setQuizQuestions(loadedBatch.questions);
+                  setSelectedAnswers({});
+                  setShowResults(false);
+                  setScore(null);
+                  setKeyOverrides({});
+                  setEditKeyMode(false);
+                  // Set timer: 1 min per question
+                  setTimeLeft(loadedBatch.questions.length * 60);
+                  setTimerActive(true);
+                }}
+                onDelete={(id) => {
+                  mcqStore.getState().deletQuesitonbatchById(id);
+                }}
+              />
+            ))}
+          </div>
+        </section>
       )}
       <main className="space-y-4 grid gap-1 grid-cols-2 md:grid-cols-3 text-sm">
         {quizQuestions.map((mcq, index) => {
