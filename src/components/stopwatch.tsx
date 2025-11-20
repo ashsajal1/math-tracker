@@ -69,7 +69,7 @@ export const Stopwatch = ({
         addProblem(
           {
             subject: selectedTopic.subject,
-            topic: chapter || selectedTopic.topic,
+            topic: "Revision/Reading",
           },
           5 // 5 points for 10 minutes of study
         );
