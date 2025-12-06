@@ -51,6 +51,10 @@ export default function Home() {
               Study Timer
             </Button>
 
+            <Button variant="outline" asChild>
+              <Link to="/time-stats">Time Stats</Link>
+            </Button>
+
             <Button>
               <Link to={"/mcq"}>Give unlimited MCQs</Link>
             </Button>

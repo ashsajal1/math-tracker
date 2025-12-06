@@ -30,7 +30,6 @@ export const Stopwatch = ({
   const {
     isRunning,
     startTime,
-    accumulatedTime,
     selectedTopicId,
     chapter,
     lastProcessedTime,
@@ -41,10 +40,11 @@ export const Stopwatch = ({
     setChapter,
     setElapsedTime,
     updateLastProcessedTime,
+    getTopicTime,
   } = useTimeTrackStore();
 
   // Local display state
-  const [displayTime, setDisplayTime] = useState<number>(accumulatedTime);
+  const [displayTime, setDisplayTime] = useState<number>(0);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editMinutes, setEditMinutes] = useState("");
 
@@ -69,12 +69,59 @@ export const Stopwatch = ({
       const now = Date.now();
       const currentSessionTime =
         isRunning && startTime ? Math.floor((now - startTime) / 1000) : 0;
-      const totalTime = accumulatedTime + currentSessionTime;
+
+      const topicTime = getTopicTime(selectedTopicId);
+      const totalTime = topicTime + currentSessionTime;
 
       setDisplayTime(totalTime);
 
       // Check for 10-minute intervals
       // 600 seconds = 10 minutes
+      // We use totalTime for the topic to determine points
+      // But we need to be careful: lastProcessedTime tracks "when we last gave points".
+      // If we switch topics, lastProcessedTime might be irrelevant if it's not per-topic?
+      // Wait, lastProcessedTime in store is GLOBAL/SINGLE.
+      // If I study Topic A for 10 mins -> points. Switch to Topic B.
+      // Topic B has 0 mins. `totalTime` is 0. `lastProcessedTime` is 600.
+      // `totalTime - lastProcessedTime` = -600. No points. Correct.
+      // But what if I go back to Topic A? `totalTime` is 10 mins. `lastProcessedTime` is 600.
+      // `totalTime - lastProcessedTime` = 0. No points.
+      // If I study Topic A for another 10 mins -> `totalTime` 20 mins. Diff 600. Points!
+      // So a single `lastProcessedTime` MIGHT work if it tracks "total points awarded * 600" roughly?
+      // NO. `lastProcessedTime` was "accumulatedTime + sessionTime" when points were awarded.
+      // If we switch topics, `accumulatedTime` changes!
+      // So `lastProcessedTime` MUST be tracked per topic OR we just calculate points based on `Math.floor(totalTime / 600)`.
+      // If we use `Math.floor`, we need to know how many points we ALREADY gave.
+      // Maybe we don't store `lastProcessedTime` in store?
+      // Or we store `pointsAwarded` in `topicTimes`? No, that's just time.
+      // Let's use a local ref or just rely on the store's `lastProcessedTime` BUT we need to reset/sync it when topic changes.
+      // Actually, simplest way:
+      // Calculate `expectedPoints = Math.floor(totalTime / 600)`.
+      // We need to know `awardedPoints` for this topic.
+      // Maybe we don't store `lastProcessedTime` in store?
+      // Or we store `pointsAwarded` in `topicTimes`? No, that's just time.
+      // Let's just use a local state `lastPointsAwarded` for the current session?
+      // But if I refresh, I lose that.
+      // Let's update the store to track `lastProcessedTime` as a MAP too? Or just simplify.
+      // Let's assume for now we just check if `totalTime % 600 === 0` (roughly)? No, timer ticks.
+      // Let's use `lastProcessedTime` from store, but we need to update it when topic changes?
+      // Actually, `lastProcessedTime` in the store is currently just a number.
+      // Let's try to use `Math.floor(totalTime / 600)` and compare it to something?
+      // If we don't track "points awarded" per topic, we might double award or miss.
+      // For this iteration, let's just stick to the single `lastProcessedTime` but reset it when topic changes?
+      // No, that would allow farming points by switching topics.
+      // Let's just check `totalTime` against `lastProcessedTime` IF `lastProcessedTime` was also per topic.
+      // Since I didn't add `lastProcessedTimeMap` to store, I will use a heuristic:
+      // We only award points if `currentSessionTime` crosses a boundary?
+      // Let's just use the `lastProcessedTime` as "Time mark on THIS TOPIC when we last checked".
+      // But we need to save it per topic.
+      // I'll update `useTimeTrackStore` to have `topicLastProcessed: Record<string, number>` in a future step if needed.
+      // For now, let's just use `Math.floor(totalTime / 600)` and compare with a local ref that initializes from `totalTime`?
+      // No, persistence.
+      // Let's just use the store's `lastProcessedTime` and assume it tracks the CURRENT topic's processed time.
+      // When we switch topic, we should probably update `lastProcessedTime` to that topic's current time (floored).
+      // I'll add a `useEffect` to sync `lastProcessedTime` when topic changes.
+
       if (totalTime - lastProcessedTime >= 600) {
         const selectedTopic = topics.find((t) => t.id === selectedTopicId);
 
@@ -84,11 +131,8 @@ export const Stopwatch = ({
               subject: selectedTopic.subject,
               topic: "Revision/Reading",
             },
-            5 // 5 points for 10 minutes of study
+            5
           );
-
-          // Update last processed time to current total time (floored to interval to be safe, or just add 600)
-          // Adding 600 ensures we track every 10 mins exactly.
           updateLastProcessedTime(lastProcessedTime + 600);
         }
       }
@@ -96,22 +140,34 @@ export const Stopwatch = ({
 
     if (isRunning) {
       interval = setInterval(updateTimer, 1000);
-      updateTimer(); // Immediate update
+      updateTimer();
     } else {
-      setDisplayTime(accumulatedTime);
+      setDisplayTime(getTopicTime(selectedTopicId));
     }
 
     return () => clearInterval(interval);
   }, [
     isRunning,
     startTime,
-    accumulatedTime,
-    lastProcessedTime,
     selectedTopicId,
     topics,
     addProblem,
     updateLastProcessedTime,
+    getTopicTime,
+    lastProcessedTime,
   ]);
+
+  // Reset lastProcessedTime when topic changes to avoid conflicts?
+  // Ideally we should track it per topic.
+  // For now, let's just set lastProcessedTime to the current topic's time (floored to 600) when switching.
+  useEffect(() => {
+    if (selectedTopicId) {
+      const time = getTopicTime(selectedTopicId);
+      // We want to start awarding points from the NEXT 10 min mark.
+      // So we set lastProcessedTime to the last completed 10 min mark.
+      updateLastProcessedTime(Math.floor(time / 600) * 600);
+    }
+  }, [selectedTopicId, getTopicTime, updateLastProcessedTime]);
 
   // Update parent component when time or running state changes
   useEffect(() => {
@@ -189,7 +245,8 @@ export const Stopwatch = ({
               <select
                 value={selectedTopicId ?? ""}
                 onChange={(e) => setTopic(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                disabled={isRunning}
+                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {topics.length === 0 && (
                   <option value="">No topics available</option>
