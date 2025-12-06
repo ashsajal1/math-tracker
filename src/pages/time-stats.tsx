@@ -1,13 +1,19 @@
 import { useTimeTrackStore } from "@/lib/store/timeTrackStore";
 import { topicStore } from "@/lib/store/topicStore";
 import { motion } from "framer-motion";
-import { ArrowLeft, Clock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, Clock, BarChart2, Play } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import Seo from "@/components/Seo";
+import { useState } from "react";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import TimeChart from "@/components/stats/TimeChart";
 
 export default function TimeStats() {
   const { topicTimes, getTotalTime } = useTimeTrackStore();
   const { topics } = topicStore();
+  const [showChart, setShowChart] = useState(false);
+  const navigate = useNavigate();
 
   const formatTime = (seconds: number): string => {
     const hrs = Math.floor(seconds / 3600);
@@ -28,6 +34,14 @@ export default function TimeStats() {
     const timeB = topicTimes[b.id] || 0;
     return timeB - timeA;
   });
+
+  const chartData = sortedTopics
+    .map((topic) => ({
+      name: topic.subject,
+      value: topicTimes[topic.id] || 0,
+      formattedTime: formatTime(topicTimes[topic.id] || 0),
+    }))
+    .filter((d) => d.value > 0);
 
   return (
     <>
@@ -54,6 +68,13 @@ export default function TimeStats() {
           </h1>
         </div>
 
+        <div className="flex justify-end">
+          <Button onClick={() => navigate("/")} className="gap-2">
+            <Play className="w-4 h-4" />
+            Start Studying
+          </Button>
+        </div>
+
         {/* Total Time Card */}
         <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-8 text-white shadow-xl">
           <div className="flex items-center gap-3 mb-2 opacity-90">
@@ -67,6 +88,29 @@ export default function TimeStats() {
             Keep up the great work! Consistent effort leads to mastery.
           </div>
         </div>
+
+        {/* Chart Toggle */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <BarChart2 className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+            <span className="font-medium text-slate-900 dark:text-slate-100">
+              Show Chart
+            </span>
+          </div>
+          <Switch checked={showChart} onCheckedChange={setShowChart} />
+        </div>
+
+        {/* Chart Section */}
+        {showChart && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <TimeChart data={chartData} />
+          </motion.div>
+        )}
 
         {/* Topic Breakdown */}
         <div className="space-y-4">
