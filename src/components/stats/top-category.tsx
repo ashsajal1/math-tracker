@@ -36,7 +36,7 @@ export default function TopCategoryCard() {
                 <div className="flex items-center justify-between text-xs sm:text-sm">
                   <span className="capitalize flex items-center gap-2">
                     <Award className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
-                    {item.topic}
+                    {item.subject} - {item.topic}
                   </span>
                   <span className="font-medium">{item.points}</span>
                 </div>
