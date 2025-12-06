@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { topicStore, Topic } from "@/lib/store/topicStore";
-import { Play, Pause, RotateCcw, X, Award, Edit2 } from "lucide-react";
+import { Play, Pause, RotateCcw, X, Award, Edit2, Square } from "lucide-react";
 import { useMathStore } from "@/lib/store/mathStore";
 import { useTimeTrackStore } from "@/lib/store/timeTrackStore";
 import {
@@ -30,12 +30,14 @@ export const Stopwatch = ({
   const {
     isRunning,
     startTime,
+    accumulatedTime, // Re-introduced
     selectedTopicId,
     chapter,
     lastProcessedTime,
     start,
     stop,
     reset,
+    saveSession, // New action
     setTopic,
     setChapter,
     setElapsedTime,
@@ -45,6 +47,7 @@ export const Stopwatch = ({
 
   // Local display state
   const [displayTime, setDisplayTime] = useState<number>(0);
+  const [sessionTime, setSessionTime] = useState<number>(0); // Track current session time for display
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editMinutes, setEditMinutes] = useState("");
 
@@ -70,57 +73,24 @@ export const Stopwatch = ({
       const currentSessionTime =
         isRunning && startTime ? Math.floor((now - startTime) / 1000) : 0;
 
-      const topicTime = getTopicTime(selectedTopicId);
-      const totalTime = topicTime + currentSessionTime;
+      // Total time for this session (accumulated + current)
+      const currentTotalSessionTime = accumulatedTime + currentSessionTime;
+      setSessionTime(currentTotalSessionTime);
 
-      setDisplayTime(totalTime);
+      // Total time for topic (historical + current session)
+      const topicTime = getTopicTime(selectedTopicId);
+      const totalTime = topicTime + currentTotalSessionTime;
+
+      setDisplayTime(currentTotalSessionTime); // Show SESSION time, not total topic time?
+      // User request: "save timer...". Usually stopwatch shows *current session*.
+      // If I want to see total topic time, I go to stats.
+      // Let's show SESSION time in the big display.
 
       // Check for 10-minute intervals
-      // 600 seconds = 10 minutes
-      // We use totalTime for the topic to determine points
-      // But we need to be careful: lastProcessedTime tracks "when we last gave points".
-      // If we switch topics, lastProcessedTime might be irrelevant if it's not per-topic?
-      // Wait, lastProcessedTime in store is GLOBAL/SINGLE.
-      // If I study Topic A for 10 mins -> points. Switch to Topic B.
-      // Topic B has 0 mins. `totalTime` is 0. `lastProcessedTime` is 600.
-      // `totalTime - lastProcessedTime` = -600. No points. Correct.
-      // But what if I go back to Topic A? `totalTime` is 10 mins. `lastProcessedTime` is 600.
-      // `totalTime - lastProcessedTime` = 0. No points.
-      // If I study Topic A for another 10 mins -> `totalTime` 20 mins. Diff 600. Points!
-      // So a single `lastProcessedTime` MIGHT work if it tracks "total points awarded * 600" roughly?
-      // NO. `lastProcessedTime` was "accumulatedTime + sessionTime" when points were awarded.
-      // If we switch topics, `accumulatedTime` changes!
-      // So `lastProcessedTime` MUST be tracked per topic OR we just calculate points based on `Math.floor(totalTime / 600)`.
-      // If we use `Math.floor`, we need to know how many points we ALREADY gave.
-      // Maybe we don't store `lastProcessedTime` in store?
-      // Or we store `pointsAwarded` in `topicTimes`? No, that's just time.
-      // Let's use a local ref or just rely on the store's `lastProcessedTime` BUT we need to reset/sync it when topic changes.
-      // Actually, simplest way:
-      // Calculate `expectedPoints = Math.floor(totalTime / 600)`.
-      // We need to know `awardedPoints` for this topic.
-      // Maybe we don't store `lastProcessedTime` in store?
-      // Or we store `pointsAwarded` in `topicTimes`? No, that's just time.
-      // Let's just use a local state `lastPointsAwarded` for the current session?
-      // But if I refresh, I lose that.
-      // Let's update the store to track `lastProcessedTime` as a MAP too? Or just simplify.
-      // Let's assume for now we just check if `totalTime % 600 === 0` (roughly)? No, timer ticks.
-      // Let's use `lastProcessedTime` from store, but we need to update it when topic changes?
-      // Actually, `lastProcessedTime` in the store is currently just a number.
-      // Let's try to use `Math.floor(totalTime / 600)` and compare it to something?
-      // If we don't track "points awarded" per topic, we might double award or miss.
-      // For this iteration, let's just stick to the single `lastProcessedTime` but reset it when topic changes?
-      // No, that would allow farming points by switching topics.
-      // Let's just check `totalTime` against `lastProcessedTime` IF `lastProcessedTime` was also per topic.
-      // Since I didn't add `lastProcessedTimeMap` to store, I will use a heuristic:
-      // We only award points if `currentSessionTime` crosses a boundary?
-      // Let's just use the `lastProcessedTime` as "Time mark on THIS TOPIC when we last checked".
-      // But we need to save it per topic.
-      // I'll update `useTimeTrackStore` to have `topicLastProcessed: Record<string, number>` in a future step if needed.
-      // For now, let's just use `Math.floor(totalTime / 600)` and compare with a local ref that initializes from `totalTime`?
-      // No, persistence.
-      // Let's just use the store's `lastProcessedTime` and assume it tracks the CURRENT topic's processed time.
-      // When we switch topic, we should probably update `lastProcessedTime` to that topic's current time (floored).
-      // I'll add a `useEffect` to sync `lastProcessedTime` when topic changes.
+      // We use totalTime (historical + current) for points? Or just session?
+      // "5 points for 10 minutes of study".
+      // If I study 5 mins, stop, study 5 mins. Should I get points? Yes.
+      // So we should check against `totalTime`.
 
       if (totalTime - lastProcessedTime >= 600) {
         const selectedTopic = topics.find((t) => t.id === selectedTopicId);
@@ -142,13 +112,16 @@ export const Stopwatch = ({
       interval = setInterval(updateTimer, 1000);
       updateTimer();
     } else {
-      setDisplayTime(getTopicTime(selectedTopicId));
+      // When stopped/paused, show accumulated session time
+      setSessionTime(accumulatedTime);
+      setDisplayTime(accumulatedTime);
     }
 
     return () => clearInterval(interval);
   }, [
     isRunning,
     startTime,
+    accumulatedTime,
     selectedTopicId,
     topics,
     addProblem,
@@ -175,6 +148,10 @@ export const Stopwatch = ({
       onTimeUpdate(displayTime, isRunning);
     }
   }, [displayTime, isRunning, onTimeUpdate]);
+
+  const handleStop = () => {
+    saveSession();
+  };
 
   const handleEditTime = () => {
     const minutes = parseInt(editMinutes);
@@ -277,7 +254,7 @@ export const Stopwatch = ({
           <div className="mb-8">
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-8 text-center border border-blue-200 dark:border-blue-800">
               <div className="text-6xl font-mono font-bold text-slate-900 dark:text-slate-100 tracking-wider relative group">
-                {formatTime(displayTime)}
+                {formatTime(sessionTime)}
                 <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                   <DialogTrigger asChild>
                     <button className="absolute -right-8 top-1/2 -translate-y-1/2 p-2 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-blue-500">
@@ -347,6 +324,15 @@ export const Stopwatch = ({
                   Start
                 </>
               )}
+            </button>
+
+            <button
+              onClick={handleStop}
+              disabled={!selectedTopicId || sessionTime === 0}
+              className="flex items-center gap-2 px-6 py-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+            >
+              <Square className="w-5 h-5 fill-current" />
+              Stop
             </button>
 
             <button
