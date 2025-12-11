@@ -38,6 +38,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Plus,
   Trash2,
@@ -47,10 +48,25 @@ import {
   Sparkles,
   Clock,
   Edit,
+  LayoutList,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import Seo from "@/components/Seo";
 import { Link } from "react-router-dom";
-import { format, formatDistanceToNow, isPast, isToday } from "date-fns";
+import {
+  format,
+  formatDistanceToNow,
+  isPast,
+  isToday,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameDay,
+  addMonths,
+  subMonths,
+} from "date-fns";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -97,6 +113,10 @@ export default function TasksPage() {
     useState<TaskPriority>("medium");
   const [selectedTaskType, setSelectedTaskType] =
     useState<TaskType>("revision");
+
+  // View Mode State
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // Edit dialog state
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -214,6 +234,26 @@ export default function TasksPage() {
               <Sparkles className="w-4 h-4 mr-2" />
               Generate Tasks
             </Button>
+            <div className="border rounded-md p-1 bg-background flex items-center gap-1">
+              <ToggleGroup
+                type="single"
+                value={viewMode}
+                onValueChange={(value) => {
+                  if (value) setViewMode(value as "list" | "calendar");
+                }}
+              >
+                <ToggleGroupItem value="list" size="sm" aria-label="List view">
+                  <LayoutList className="h-4 w-4" />
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="calendar"
+                  size="sm"
+                  aria-label="Calendar view"
+                >
+                  <CalendarDays className="h-4 w-4" />
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
@@ -433,177 +473,308 @@ export default function TasksPage() {
           </Card>
         )}
 
-        {/* Today's Tasks */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Today's Tasks
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {todaysTasks.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No tasks scheduled for today.</p>
-                <p className="text-sm mt-2">
-                  Add a new task or generate tasks from your topics!
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <AnimatePresence>
-                  {todaysTasks.map((task) => {
-                    const dueDateInfo = getDueDateDisplay(task.dueDate);
-                    return (
-                      <motion.div
-                        key={task.id}
-                        layout
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
-                          task.isCompleted
-                            ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
-                            : "bg-card hover:bg-accent/50"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3 flex-1">
-                          <button
+        {/* Content based on View Mode */}
+        {viewMode === "list" ? (
+          <>
+            {/* Today's Tasks */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Today's Tasks
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {todaysTasks.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No tasks scheduled for today.</p>
+                    <p className="text-sm mt-2">
+                      Add a new task or generate tasks from your topics!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <AnimatePresence>
+                      {todaysTasks.map((task) => {
+                        const dueDateInfo = getDueDateDisplay(task.dueDate);
+                        return (
+                          <motion.div
+                            key={task.id}
+                            layout
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
                             onClick={() => handleToggleComplete(task)}
-                            className="flex-shrink-0"
+                            className={`flex items-center justify-between p-4 rounded-lg border transition-colors cursor-pointer ${
+                              task.isCompleted
+                                ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+                                : "bg-card hover:bg-accent/50"
+                            }`}
                           >
-                            {task.isCompleted ? (
-                              <CheckCircle2 className="w-6 h-6 text-green-500" />
-                            ) : (
-                              <Circle className="w-6 h-6 text-muted-foreground hover:text-primary" />
-                            )}
-                          </button>
+                            <div className="flex items-center gap-3 flex-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleComplete(task);
+                                }}
+                                className="flex-shrink-0"
+                              >
+                                {task.isCompleted ? (
+                                  <CheckCircle2 className="w-6 h-6 text-green-500" />
+                                ) : (
+                                  <Circle className="w-6 h-6 text-muted-foreground hover:text-primary" />
+                                )}
+                              </button>
+                              <div className="flex-1 min-w-0">
+                                <p
+                                  className={`font-medium ${
+                                    task.isCompleted
+                                      ? "line-through text-muted-foreground"
+                                      : ""
+                                  }`}
+                                >
+                                  {task.name}
+                                </p>
+                                <p className="text-sm text-muted-foreground truncate">
+                                  {getTopicName(task.topicId)}
+                                </p>
+                                <p
+                                  className={`text-xs ${dueDateInfo.className}`}
+                                >
+                                  {dueDateInfo.text}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge
+                                className={priorityConfig[task.priority].badge}
+                              >
+                                {task.priority}
+                              </Badge>
+                              {task.taskType && (
+                                <Badge variant="outline" className="text-xs">
+                                  {TASK_TYPE_LABELS[task.taskType]}
+                                </Badge>
+                              )}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* All Tasks */}
+            <Card>
+              <CardHeader>
+                <CardTitle>All Tasks ({tasks.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {tasks.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No tasks created yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {tasks.map((task) => {
+                      const dueDateInfo = getDueDateDisplay(task.dueDate);
+                      return (
+                        <div
+                          key={task.id}
+                          onClick={() => handleToggleComplete(task)}
+                          className={`flex items-center justify-between p-4 rounded-lg border bg-card cursor-pointer hover:bg-accent/50 transition-colors ${
+                            task.isCompleted
+                              ? "bg-green-50 dark:bg-green-900/20"
+                              : ""
+                          }`}
+                        >
                           <div className="flex-1 min-w-0">
-                            <p
-                              className={`font-medium ${
-                                task.isCompleted
-                                  ? "line-through text-muted-foreground"
-                                  : ""
-                              }`}
-                            >
-                              {task.name}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              {task.isCompleted && (
+                                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                              )}
+                              <p
+                                className={`font-medium ${
+                                  task.isCompleted
+                                    ? "line-through text-muted-foreground"
+                                    : ""
+                                }`}
+                              >
+                                {task.name}
+                              </p>
+                            </div>
                             <p className="text-sm text-muted-foreground truncate">
                               {getTopicName(task.topicId)}
                             </p>
-                            <p className={`text-xs ${dueDateInfo.className}`}>
-                              {dueDateInfo.text}
-                            </p>
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              <Badge
+                                className={priorityConfig[task.priority].badge}
+                              >
+                                {task.priority}
+                              </Badge>
+                              {task.taskType && (
+                                <Badge variant="outline" className="text-xs">
+                                  {TASK_TYPE_LABELS[task.taskType]}
+                                </Badge>
+                              )}
+                              <span className="text-xs text-muted-foreground">
+                                {task.weeklySchedule
+                                  .map((d) => DAYS_OF_WEEK[d])
+                                  .join(", ")}
+                              </span>
+                              <span
+                                className={`text-xs ${dueDateInfo.className}`}
+                              >
+                                • {dueDateInfo.text}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-destructive hover:text-destructive"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Delete Task
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete "{task.name}
+                                    "? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      removeTask(task.id);
+                                    }}
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenEditDialog(task);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Badge
-                            className={priorityConfig[task.priority].badge}
-                          >
-                            {task.priority}
-                          </Badge>
-                          {task.taskType && (
-                            <Badge variant="outline" className="text-xs">
-                              {TASK_TYPE_LABELS[task.taskType]}
-                            </Badge>
-                          )}
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        ) : (
+          /* Calendar View */
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>{format(currentMonth, "MMMM yyyy")}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-7 gap-2 text-center text-sm font-medium mb-2">
+                {DAYS_OF_WEEK.map((day) => (
+                  <div key={day} className="py-2">
+                    {day}
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-2">
+                {eachDayOfInterval({
+                  start: startOfMonth(currentMonth),
+                  end: endOfMonth(currentMonth),
+                }).map((date, index) => {
+                  const firstDayOfMonth = startOfMonth(currentMonth).getDay();
+                  const emptyCells =
+                    index === 0
+                      ? Array.from({ length: firstDayOfMonth }).map((_, i) => (
+                          <div
+                            key={`empty-${i}`}
+                            className="h-24 sm:h-32 bg-muted/20 rounded-md border border-transparent hidden sm:block"
+                          />
+                        ))
+                      : null;
 
-        {/* All Tasks */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Tasks ({tasks.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {tasks.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No tasks created yet.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {tasks.map((task) => {
-                  const dueDateInfo = getDueDateDisplay(task.dueDate);
+                  const dayTasks = tasks.filter((task) => {
+                    const taskDate = new Date(task.dueDate);
+                    return isSameDay(taskDate, date);
+                  });
+
                   return (
-                    <div
-                      key={task.id}
-                      className="flex items-center justify-between p-4 rounded-lg border bg-card"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium">{task.name}</p>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {getTopicName(task.topicId)}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          <Badge
-                            className={priorityConfig[task.priority].badge}
-                          >
-                            {task.priority}
-                          </Badge>
-                          {task.taskType && (
-                            <Badge variant="outline" className="text-xs">
-                              {TASK_TYPE_LABELS[task.taskType]}
-                            </Badge>
-                          )}
-                          <span className="text-xs text-muted-foreground">
-                            {task.weeklySchedule
-                              .map((d) => DAYS_OF_WEEK[d])
-                              .join(", ")}
-                          </span>
-                          <span className={`text-xs ${dueDateInfo.className}`}>
-                            • {dueDateInfo.text}
-                          </span>
-                        </div>
-                      </div>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Task</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete "{task.name}"?
-                              This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => removeTask(task.id)}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleOpenEditDialog(task)}
+                    <div key={date.toISOString()} className="contents">
+                      {emptyCells}
+                      <div
+                        className={`min-h-[6rem] sm:h-32 p-1 sm:p-2 border rounded-md flex flex-col gap-1 overflow-y-auto ${
+                          isToday(date)
+                            ? "bg-primary/5 border-primary"
+                            : "bg-card"
+                        }`}
                       >
-                        <Edit className="w-4 h-4" />
-                      </Button>
+                        <div className="text-right text-xs text-muted-foreground mb-1">
+                          {format(date, "d")}
+                        </div>
+                        {dayTasks.map((task) => (
+                          <div
+                            key={task.id}
+                            className={`text-[10px] sm:text-xs p-1 rounded truncate cursor-pointer transition-colors ${
+                              task.isCompleted
+                                ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 line-through opacity-70"
+                                : "bg-secondary text-primary hover:bg-primary/20"
+                            }`}
+                            onClick={() => handleToggleComplete(task)}
+                            title={task.name}
+                          >
+                            {task.name}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   );
                 })}
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </motion.div>
     </>
   );
