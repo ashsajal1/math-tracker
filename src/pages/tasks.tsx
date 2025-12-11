@@ -45,6 +45,7 @@ import {
   Circle,
   Sparkles,
   Clock,
+  Edit,
 } from "lucide-react";
 import Seo from "@/components/Seo";
 import { Link } from "react-router-dom";
@@ -79,6 +80,7 @@ export default function TasksPage() {
     tasks,
     addTask,
     removeTask,
+    updateTask,
     completeTask,
     resetTaskCompletion,
     getTodaysTasks,
@@ -92,6 +94,13 @@ export default function TasksPage() {
   const [selectedTopicId, setSelectedTopicId] = useState<string>("");
   const [selectedPriority, setSelectedPriority] =
     useState<TaskPriority>("medium");
+
+  // Edit dialog state
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editTaskName, setEditTaskName] = useState("");
+  const [editTopicId, setEditTopicId] = useState<string>("");
+  const [editPriority, setEditPriority] = useState<TaskPriority>("medium");
 
   const todaysTasks = getTodaysTasks();
   const overdueTasks = getOverdueTasks();
@@ -118,6 +127,26 @@ export default function TasksPage() {
     } else {
       completeTask(task.id);
     }
+  };
+
+  const handleOpenEditDialog = (task: Task) => {
+    setEditingTask(task);
+    setEditTaskName(task.name);
+    setEditTopicId(task.topicId);
+    setEditPriority(task.priority);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditTask = () => {
+    if (!editingTask || !editTaskName.trim() || !editTopicId) return;
+
+    updateTask(editingTask.id, {
+      name: editTaskName.trim(),
+      topicId: editTopicId,
+      priority: editPriority,
+    });
+    setIsEditDialogOpen(false);
+    setEditingTask(null);
   };
 
   const getTopicName = (topicId: string): string => {
@@ -255,6 +284,70 @@ export default function TasksPage() {
                     disabled={!newTaskName.trim() || !selectedTopicId}
                   >
                     Add Task
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Edit Dialog */}
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit Task</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="editTaskName">Task Name</Label>
+                    <Input
+                      id="editTaskName"
+                      placeholder="e.g., Practice Algebra Problems"
+                      value={editTaskName}
+                      onChange={(e) => setEditTaskName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="editTopic">Topic</Label>
+                    <Select value={editTopicId} onValueChange={setEditTopicId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a topic" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {topics.map((topic) => (
+                          <SelectItem key={topic.id} value={topic.id}>
+                            {topic.subject} - {topic.topic}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="editPriority">Priority</Label>
+                    <Select
+                      value={editPriority}
+                      onValueChange={(v) => setEditPriority(v as TaskPriority)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="high">
+                          {priorityConfig.high.label}
+                        </SelectItem>
+                        <SelectItem value="medium">
+                          {priorityConfig.medium.label}
+                        </SelectItem>
+                        <SelectItem value="low">
+                          {priorityConfig.low.label}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    onClick={handleEditTask}
+                    className="w-full"
+                    disabled={!editTaskName.trim() || !editTopicId}
+                  >
+                    Save Changes
                   </Button>
                 </div>
               </DialogContent>
@@ -473,6 +566,13 @@ export default function TasksPage() {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleOpenEditDialog(task)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
                     </div>
                   );
                 })}

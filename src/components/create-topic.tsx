@@ -37,7 +37,7 @@ export default function CreateTopic() {
       return;
     }
 
-    addTopic(subject, topic, points);
+    addTopic(subject, topic, "medium", points);
     setTopic("");
     setError("");
   };
