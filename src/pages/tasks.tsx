@@ -4,6 +4,7 @@ import {
   useTaskStore,
   Task,
   TaskPriority,
+  TaskType,
   TASK_TYPE_LABELS,
 } from "@/lib/store/taskStore";
 import { topicStore } from "@/lib/store/topicStore";
@@ -94,6 +95,8 @@ export default function TasksPage() {
   const [selectedTopicId, setSelectedTopicId] = useState<string>("");
   const [selectedPriority, setSelectedPriority] =
     useState<TaskPriority>("medium");
+  const [selectedTaskType, setSelectedTaskType] =
+    useState<TaskType>("revision");
 
   // Edit dialog state
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -109,10 +112,11 @@ export default function TasksPage() {
   const handleAddTask = () => {
     if (!newTaskName.trim() || !selectedTopicId) return;
 
-    addTask(newTaskName, selectedTopicId, selectedPriority);
+    addTask(newTaskName, selectedTopicId, selectedPriority, selectedTaskType);
     setNewTaskName("");
     setSelectedTopicId("");
     setSelectedPriority("medium");
+    setSelectedTaskType("revision");
     setIsAddDialogOpen(false);
   };
 
@@ -275,6 +279,26 @@ export default function TasksPage() {
                         <SelectItem value="low">
                           {priorityConfig.low.label}
                         </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="taskType">Task Type</Label>
+                    <Select
+                      value={selectedTaskType}
+                      onValueChange={(v) => setSelectedTaskType(v as TaskType)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(TASK_TYPE_LABELS).map(
+                          ([key, label]) => (
+                            <SelectItem key={key} value={key}>
+                              {label}
+                            </SelectItem>
+                          )
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
