@@ -5,10 +5,10 @@ import {
 } from './mathStore';
 
 // Export the topic store
-export { topicStore, type Topic } from './topicStore';
+export { topicStore, type Topic, type TopicPriority } from './topicStore';
 
 // Export the task store
-export { useTaskStore, type Task, type TaskPriority } from './taskStore';
+export { useTaskStore, TASK_TYPE_LABELS, type Task, type TaskPriority, type TaskType } from './taskStore';
 
 export type { MathProblemType };
 

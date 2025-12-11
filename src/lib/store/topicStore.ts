@@ -2,20 +2,24 @@ import { create } from "zustand";
 import { persist, createJSONStorage, devtools } from "zustand/middleware";
 import { v4 as uuidv4 } from "uuid";
 
+export type TopicPriority = 'high' | 'medium' | 'low';
+
 export interface Topic {
   id: string;
   subject: string;
   topic: string;
+  priority: TopicPriority;
   points?: number;
   cretedAt: string;
 }
 
 interface TopicStore {
   topics: Topic[];
-  addTopic: (subject: string, topic: string, points?: number) => void;
+  addTopic: (subject: string, topic: string, priority?: TopicPriority, points?: number) => void;
   removeTopic: (id: string) => void;
   updateTopic: (id: string, updates: Partial<Topic>) => void;
   getTopics: () => Topic[];
+  getTopicsByPriority: (priority: TopicPriority) => Topic[];
   clearAll: () => void;
 }
 
@@ -25,11 +29,12 @@ export const topicStore = create<TopicStore>()(
       (set, get) => ({
         topics: [],
 
-        addTopic: (subject, topic, points = 5) => {
-          const newTopic = {
+        addTopic: (subject, topic, priority = 'medium', points = 5) => {
+          const newTopic: Topic = {
             id: uuidv4(),
             subject: subject.toLocaleLowerCase(),
             topic: topic.toLocaleLowerCase(),
+            priority,
             points,
             cretedAt: new Date().toISOString(),
           };
@@ -65,6 +70,10 @@ export const topicStore = create<TopicStore>()(
         },
 
         getTopics: () => get().topics,
+        
+        getTopicsByPriority: (priority) => {
+          return get().topics.filter((topic) => topic.priority === priority);
+        },
         
         clearAll: () => set({ topics: [] }, false, 'topic/clearAll'),
       }),

@@ -1,14 +1,17 @@
 import { create } from "zustand";
 import { persist, createJSONStorage, devtools } from "zustand/middleware";
 import { v4 as uuidv4 } from "uuid";
+import { TopicPriority } from "./topicStore";
 
 export type TaskPriority = 'high' | 'medium' | 'low';
+export type TaskType = 'cq' | 'mcq' | 'slide' | 'revision' | 'reading';
 
 export interface Task {
   id: string;
   name: string;           // User-defined task name
   topicId: string;        // Reference to topic from topicStore
   priority: TaskPriority; // Determines frequency
+  taskType: TaskType;     // Type of task activity
   weeklySchedule: number[]; // Days of the week (0-6, Sunday-Saturday)
   dueDate: string;        // ISO date string for when task is due
   createdAt: string;
@@ -16,24 +19,43 @@ export interface Task {
   lastCompletedAt: string | null;
 }
 
+interface TopicInput {
+  id: string;
+  topic: string;
+  subject: string;
+  priority?: TopicPriority;
+  points?: number;
+}
+
 interface TaskStore {
   tasks: Task[];
   
   // Actions
-  addTask: (name: string, topicId: string, priority: TaskPriority, dueDate?: Date) => void;
+  addTask: (name: string, topicId: string, priority: TaskPriority, taskType?: TaskType, dueDate?: Date) => void;
   removeTask: (id: string) => void;
   updateTask: (id: string, updates: Partial<Task>) => void;
   completeTask: (id: string) => void;
   resetTaskCompletion: (id: string) => void;
-  generateRandomTasks: (topics: { id: string; topic: string; subject: string; points?: number }[]) => void;
+  generateRandomTasks: (topics: TopicInput[]) => void;
   
   // Selectors
   getTasks: () => Task[];
   getTodaysTasks: () => Task[];
   getTasksByPriority: (priority: TaskPriority) => Task[];
+  getTasksByType: (taskType: TaskType) => Task[];
   getOverdueTasks: () => Task[];
   clearAll: () => void;
 }
+
+const TASK_TYPES: TaskType[] = ['cq', 'mcq', 'slide', 'revision', 'reading'];
+
+const TASK_TYPE_LABELS: Record<TaskType, string> = {
+  cq: 'Conceptual Questions',
+  mcq: 'Multiple Choice Questions',
+  slide: 'Slide Review',
+  revision: 'Revision',
+  reading: 'Reading',
+};
 
 /**
  * Generate weekly schedule based on priority
@@ -85,28 +107,60 @@ const generateRandomDueDate = (priority: TaskPriority): Date => {
 };
 
 /**
- * Determine priority based on topic points
+ * Get a random task type
  */
-const determinePriorityFromPoints = (points?: number): TaskPriority => {
-  if (!points) return 'medium';
-  if (points >= 8) return 'high';
-  if (points >= 4) return 'medium';
-  return 'low';
+const getRandomTaskType = (): TaskType => {
+  return TASK_TYPES[Math.floor(Math.random() * TASK_TYPES.length)];
 };
 
 /**
- * Generate random task names for study activities
+ * Generate task name based on topic and task type
  */
-const generateTaskName = (topicName: string, subjectName: string): string => {
-  const taskTemplates = [
-    `Practice ${topicName} problems`,
-    `Review ${topicName} concepts`,
-    `Solve ${subjectName} - ${topicName} exercises`,
-    `Study ${topicName} chapter`,
-    `Complete ${topicName} worksheet`,
-    `Master ${topicName} fundamentals`,
-  ];
-  return taskTemplates[Math.floor(Math.random() * taskTemplates.length)];
+const generateTaskName = (topicName: string, subjectName: string, taskType: TaskType): string => {
+  const templates: Record<TaskType, string[]> = {
+    cq: [
+      `Answer ${topicName} conceptual questions`,
+      `Practice ${topicName} CQ problems`,
+    ],
+    mcq: [
+      `Complete ${topicName} MCQ practice`,
+      `Solve ${subjectName} - ${topicName} MCQs`,
+    ],
+    slide: [
+      `Review ${topicName} slides`,
+      `Study ${topicName} presentation`,
+    ],
+    revision: [
+      `Revise ${topicName} concepts`,
+      `Quick revision: ${topicName}`,
+    ],
+    reading: [
+      `Read ${topicName} chapter`,
+      `Study ${topicName} material`,
+    ],
+  };
+  
+  const typeTemplates = templates[taskType];
+  return typeTemplates[Math.floor(Math.random() * typeTemplates.length)];
+};
+
+/**
+ * Determine how many tasks to generate based on topic priority
+ * - high priority topics get more tasks (3-4)
+ * - medium priority topics get moderate tasks (2-3)
+ * - low priority topics get fewer tasks (1-2)
+ */
+const getTaskCountForPriority = (priority: TopicPriority | undefined): number => {
+  switch (priority) {
+    case 'high':
+      return Math.floor(Math.random() * 2) + 3; // 3-4 tasks
+    case 'medium':
+      return Math.floor(Math.random() * 2) + 2; // 2-3 tasks
+    case 'low':
+      return Math.floor(Math.random() * 2) + 1; // 1-2 tasks
+    default:
+      return 2;
+  }
 };
 
 /**
@@ -148,12 +202,13 @@ export const useTaskStore = create<TaskStore>()(
       (set, get) => ({
         tasks: [],
 
-        addTask: (name, topicId, priority, dueDate) => {
+        addTask: (name, topicId, priority, taskType = 'revision', dueDate) => {
           const newTask: Task = {
             id: uuidv4(),
             name: name.trim(),
             topicId,
             priority,
+            taskType,
             weeklySchedule: generateWeeklySchedule(priority),
             dueDate: (dueDate || generateRandomDueDate(priority)).toISOString(),
             createdAt: new Date().toISOString(),
@@ -230,20 +285,48 @@ export const useTaskStore = create<TaskStore>()(
         generateRandomTasks: (topics) => {
           if (topics.length === 0) return;
           
-          const newTasks: Task[] = topics.map((topic) => {
-            const priority = determinePriorityFromPoints(topic.points);
-            return {
-              id: uuidv4(),
-              name: generateTaskName(topic.topic, topic.subject),
-              topicId: topic.id,
-              priority,
-              weeklySchedule: generateWeeklySchedule(priority),
-              dueDate: generateRandomDueDate(priority).toISOString(),
-              createdAt: new Date().toISOString(),
-              isCompleted: false,
-              lastCompletedAt: null,
-            };
+          // Sort topics by priority: high first, then medium, then low
+          const priorityOrder: Record<TopicPriority, number> = { high: 0, medium: 1, low: 2 };
+          const sortedTopics = [...topics].sort((a, b) => {
+            const aPriority = a.priority || 'medium';
+            const bPriority = b.priority || 'medium';
+            return priorityOrder[aPriority] - priorityOrder[bPriority];
           });
+          
+          const newTasks: Task[] = [];
+          
+          for (const topic of sortedTopics) {
+            const topicPriority = topic.priority || 'medium';
+            const taskCount = getTaskCountForPriority(topicPriority);
+            const usedTypes = new Set<TaskType>();
+            
+            for (let i = 0; i < taskCount; i++) {
+              // Try to get a unique task type for each task
+              let taskType = getRandomTaskType();
+              let attempts = 0;
+              while (usedTypes.has(taskType) && attempts < 5) {
+                taskType = getRandomTaskType();
+                attempts++;
+              }
+              usedTypes.add(taskType);
+              
+              // Task priority matches topic priority
+              const taskPriority: TaskPriority = topicPriority;
+              
+              newTasks.push({
+                id: uuidv4(),
+                name: generateTaskName(topic.topic, topic.subject, taskType),
+                topicId: topic.id,
+                priority: taskPriority,
+                taskType,
+                weeklySchedule: generateWeeklySchedule(taskPriority),
+                dueDate: generateRandomDueDate(taskPriority).toISOString(),
+                createdAt: new Date().toISOString(),
+                isCompleted: false,
+                lastCompletedAt: null,
+              });
+            }
+          }
           
           set(
             (state) => ({
@@ -273,6 +356,10 @@ export const useTaskStore = create<TaskStore>()(
           return get().tasks.filter((task) => task.priority === priority);
         },
 
+        getTasksByType: (taskType) => {
+          return get().tasks.filter((task) => task.taskType === taskType);
+        },
+
         getOverdueTasks: () => {
           return get().tasks.filter(isOverdue);
         },
@@ -290,3 +377,5 @@ export const useTaskStore = create<TaskStore>()(
     }
   )
 );
+
+export { TASK_TYPE_LABELS };

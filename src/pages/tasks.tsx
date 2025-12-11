@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTaskStore, Task, TaskPriority } from "@/lib/store/taskStore";
+import {
+  useTaskStore,
+  Task,
+  TaskPriority,
+  TASK_TYPE_LABELS,
+} from "@/lib/store/taskStore";
 import { topicStore } from "@/lib/store/topicStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -374,12 +379,17 @@ export default function TasksPage() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Badge
                             className={priorityConfig[task.priority].badge}
                           >
                             {task.priority}
                           </Badge>
+                          {task.taskType && (
+                            <Badge variant="outline" className="text-xs">
+                              {TASK_TYPE_LABELS[task.taskType]}
+                            </Badge>
+                          )}
                         </div>
                       </motion.div>
                     );
@@ -420,6 +430,11 @@ export default function TasksPage() {
                           >
                             {task.priority}
                           </Badge>
+                          {task.taskType && (
+                            <Badge variant="outline" className="text-xs">
+                              {TASK_TYPE_LABELS[task.taskType]}
+                            </Badge>
+                          )}
                           <span className="text-xs text-muted-foreground">
                             {task.weeklySchedule
                               .map((d) => DAYS_OF_WEEK[d])
