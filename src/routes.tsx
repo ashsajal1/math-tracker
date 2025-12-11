@@ -8,6 +8,7 @@ import Settings from "./pages/settings";
 import Profile from "./pages/profile";
 import McqPage from "./pages/mcq";
 import TimeStats from "./pages/time-stats";
+import TasksPage from "./pages/tasks";
 
 export const router = createBrowserRouter([
   {
@@ -34,6 +35,10 @@ export const router = createBrowserRouter([
       {
         path: "/time-stats",
         element: <TimeStats />,
+      },
+      {
+        path: "/tasks",
+        element: <TasksPage />,
       },
       {
         path: "/mcq",

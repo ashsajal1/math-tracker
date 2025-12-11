@@ -55,6 +55,10 @@ export default function Home() {
               <Link to="/time-stats">Time Stats</Link>
             </Button>
 
+            <Button variant="outline" asChild>
+              <Link to="/tasks">Tasks</Link>
+            </Button>
+
             <Button>
               <Link to={"/mcq"}>Give unlimited MCQs</Link>
             </Button>

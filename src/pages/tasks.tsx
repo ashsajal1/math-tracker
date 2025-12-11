@@ -1,0 +1,471 @@
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useTaskStore, Task, TaskPriority } from "@/lib/store/taskStore";
+import { topicStore } from "@/lib/store/topicStore";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Plus,
+  Trash2,
+  Calendar,
+  CheckCircle2,
+  Circle,
+  Sparkles,
+  Clock,
+} from "lucide-react";
+import Seo from "@/components/Seo";
+import { Link } from "react-router-dom";
+import { format, formatDistanceToNow, isPast, isToday } from "date-fns";
+
+const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const priorityConfig: Record<
+  TaskPriority,
+  { label: string; color: string; badge: string }
+> = {
+  high: {
+    label: "High (Daily)",
+    color: "text-red-500",
+    badge: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+  },
+  medium: {
+    label: "Medium (4 days/week)",
+    color: "text-yellow-500",
+    badge:
+      "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
+  },
+  low: {
+    label: "Low (2 days/week)",
+    color: "text-green-500",
+    badge: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+  },
+};
+
+export default function TasksPage() {
+  const {
+    tasks,
+    addTask,
+    removeTask,
+    completeTask,
+    resetTaskCompletion,
+    getTodaysTasks,
+    generateRandomTasks,
+    getOverdueTasks,
+  } = useTaskStore();
+  const topics = topicStore((state) => state.topics);
+
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newTaskName, setNewTaskName] = useState("");
+  const [selectedTopicId, setSelectedTopicId] = useState<string>("");
+  const [selectedPriority, setSelectedPriority] =
+    useState<TaskPriority>("medium");
+
+  const todaysTasks = getTodaysTasks();
+  const overdueTasks = getOverdueTasks();
+  const today = new Date().getDay();
+
+  const handleAddTask = () => {
+    if (!newTaskName.trim() || !selectedTopicId) return;
+
+    addTask(newTaskName, selectedTopicId, selectedPriority);
+    setNewTaskName("");
+    setSelectedTopicId("");
+    setSelectedPriority("medium");
+    setIsAddDialogOpen(false);
+  };
+
+  const handleGenerateRandomTasks = () => {
+    if (topics.length === 0) return;
+    generateRandomTasks(topics);
+  };
+
+  const handleToggleComplete = (task: Task) => {
+    if (task.isCompleted) {
+      resetTaskCompletion(task.id);
+    } else {
+      completeTask(task.id);
+    }
+  };
+
+  const getTopicName = (topicId: string): string => {
+    const topic = topics.find((t) => t.id === topicId);
+    return topic ? `${topic.subject} - ${topic.topic}` : "Unknown Topic";
+  };
+
+  const getDueDateDisplay = (dueDate: string) => {
+    const date = new Date(dueDate);
+    if (isToday(date)) {
+      return { text: "Due today", className: "text-orange-500" };
+    }
+    if (isPast(date)) {
+      return {
+        text: `Overdue - ${formatDistanceToNow(date, { addSuffix: true })}`,
+        className: "text-red-500",
+      };
+    }
+    return {
+      text: `Due ${format(date, "MMM d")} (${formatDistanceToNow(date, {
+        addSuffix: true,
+      })})`,
+      className: "text-muted-foreground",
+    };
+  };
+
+  const completedCount = todaysTasks.filter((t) => t.isCompleted).length;
+  const progressPercentage =
+    todaysTasks.length > 0 ? (completedCount / todaysTasks.length) * 100 : 0;
+
+  return (
+    <>
+      <Seo
+        title="Weekly Tasks - Math Tracker"
+        description="Manage your weekly study tasks and track your progress."
+      />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="p-4 sm:p-6 space-y-6 max-w-4xl mx-auto"
+      >
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Weekly Tasks</h1>
+            <p className="text-muted-foreground">
+              Today is {DAYS_OF_WEEK[today]} • {completedCount}/
+              {todaysTasks.length} tasks completed
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/">Back to Home</Link>
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleGenerateRandomTasks}
+              disabled={topics.length === 0}
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Generate Tasks
+            </Button>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Task
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Task</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="taskName">Task Name</Label>
+                    <Input
+                      id="taskName"
+                      placeholder="e.g., Practice Algebra Problems"
+                      value={newTaskName}
+                      onChange={(e) => setNewTaskName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="topic">Topic</Label>
+                    <Select
+                      value={selectedTopicId}
+                      onValueChange={setSelectedTopicId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a topic" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {topics.map((topic) => (
+                          <SelectItem key={topic.id} value={topic.id}>
+                            {topic.subject} - {topic.topic}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {topics.length === 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        No topics available. Please add topics first.
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="priority">Priority</Label>
+                    <Select
+                      value={selectedPriority}
+                      onValueChange={(v) =>
+                        setSelectedPriority(v as TaskPriority)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="high">
+                          {priorityConfig.high.label}
+                        </SelectItem>
+                        <SelectItem value="medium">
+                          {priorityConfig.medium.label}
+                        </SelectItem>
+                        <SelectItem value="low">
+                          {priorityConfig.low.label}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    onClick={handleAddTask}
+                    className="w-full"
+                    disabled={!newTaskName.trim() || !selectedTopicId}
+                  >
+                    Add Task
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        {todaysTasks.length > 0 && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Today's Progress</span>
+                <span className="text-sm text-muted-foreground">
+                  {Math.round(progressPercentage)}%
+                </span>
+              </div>
+              <div className="h-3 bg-secondary rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-blue-500 to-purple-600"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressPercentage}%` }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Overdue Tasks Alert */}
+        {overdueTasks.length > 0 && (
+          <Card className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-red-600 dark:text-red-400 flex items-center gap-2 text-lg">
+                <Clock className="w-5 h-5" />
+                Overdue Tasks ({overdueTasks.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {overdueTasks.slice(0, 3).map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center justify-between text-sm"
+                  >
+                    <span>{task.name}</span>
+                    <span className="text-red-500">
+                      {getDueDateDisplay(task.dueDate).text}
+                    </span>
+                  </div>
+                ))}
+                {overdueTasks.length > 3 && (
+                  <p className="text-sm text-muted-foreground">
+                    +{overdueTasks.length - 3} more overdue tasks
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Today's Tasks */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Today's Tasks
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {todaysTasks.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No tasks scheduled for today.</p>
+                <p className="text-sm mt-2">
+                  Add a new task or generate tasks from your topics!
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <AnimatePresence>
+                  {todaysTasks.map((task) => {
+                    const dueDateInfo = getDueDateDisplay(task.dueDate);
+                    return (
+                      <motion.div
+                        key={task.id}
+                        layout
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
+                          task.isCompleted
+                            ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+                            : "bg-card hover:bg-accent/50"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          <button
+                            onClick={() => handleToggleComplete(task)}
+                            className="flex-shrink-0"
+                          >
+                            {task.isCompleted ? (
+                              <CheckCircle2 className="w-6 h-6 text-green-500" />
+                            ) : (
+                              <Circle className="w-6 h-6 text-muted-foreground hover:text-primary" />
+                            )}
+                          </button>
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className={`font-medium ${
+                                task.isCompleted
+                                  ? "line-through text-muted-foreground"
+                                  : ""
+                              }`}
+                            >
+                              {task.name}
+                            </p>
+                            <p className="text-sm text-muted-foreground truncate">
+                              {getTopicName(task.topicId)}
+                            </p>
+                            <p className={`text-xs ${dueDateInfo.className}`}>
+                              {dueDateInfo.text}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            className={priorityConfig[task.priority].badge}
+                          >
+                            {task.priority}
+                          </Badge>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* All Tasks */}
+        <Card>
+          <CardHeader>
+            <CardTitle>All Tasks ({tasks.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {tasks.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No tasks created yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {tasks.map((task) => {
+                  const dueDateInfo = getDueDateDisplay(task.dueDate);
+                  return (
+                    <div
+                      key={task.id}
+                      className="flex items-center justify-between p-4 rounded-lg border bg-card"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium">{task.name}</p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {getTopicName(task.topicId)}
+                        </p>
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <Badge
+                            className={priorityConfig[task.priority].badge}
+                          >
+                            {task.priority}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {task.weeklySchedule
+                              .map((d) => DAYS_OF_WEEK[d])
+                              .join(", ")}
+                          </span>
+                          <span className={`text-xs ${dueDateInfo.className}`}>
+                            • {dueDateInfo.text}
+                          </span>
+                        </div>
+                      </div>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Task</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{task.name}"?
+                              This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => removeTask(task.id)}
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+    </>
+  );
+}
